@@ -1,0 +1,12 @@
+Source: openpanel-mod-keepalived
+Section: misc
+Priority: optional
+Maintainer: OpenPanel packager <packages@openpanel.com>
+Build-Depends: debhelper (>= 5), openpanel-dev
+Standards-Version: 3.7.2
+
+Package: openpanel-mod-keepalived
+Architecture: all
+Depends: keepalived
+Description: Configure Keepalived Loadbalancing from OpenPanel
+ You can configure VRRP and LVS via Keepalived.

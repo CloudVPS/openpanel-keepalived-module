@@ -1,0 +1,98 @@
+# This file is part of OpenPanel - The Open Source Control Panel
+# OpenPanel is free software: you can redistribute it and/or modify it 
+# under the terms of the GNU General Public License as published by the Free 
+# Software Foundation, using version 3 of the License.
+#
+# Please note that use of the OpenPanel trademark may be subject to additional 
+# restrictions. For more information, please visit the Legal Information 
+# section of the OpenPanel website on http://www.openpanel.com/
+============================================================================
+# OpenPanel Keepalived.module for loadbalancing/vrrp configuration
+# ============================================================================
+module Keepalived           < uuid 6b8bda6c-5212-4f88-ae64-a5fa7487cba8
+							< version 1.0
+							< languages en_EN
+							< apitype grace
+							< getconfig true
+							< license GPLv3
+							< author OpenPanel
+							< url http://www.openpanel.com/
+
+
+# ============================================================================
+# CLASSES
+# ============================================================================
+class Meta:Keepalived		< uuid b7bdba75-f440-4d84-a5d5-ef7bfa4b78c0
+							< version 1
+							< indexing manual
+							< singleton keepalived
+							< allchildren true
+							< shortname keepalived
+							< title HA
+                            < description High availability settings
+							< sortindex 85
+							< explanation iptables.html
+							< icon firewall.png
+							
+							< capabilities update admin
+							
+# ----------------------------------------------------------------------------
+class Keepalived:SLBMaster  < uuid efde574b-c31e-4ed8-8062-58c590f5c7a8
+							< version 1
+							< indexing manual
+							< uniquein class
+							< allchildren true
+							< shortname ha_master
+							< sortindex 90
+							< title SLB Master
+							< description Create Server LoadBalancing profiles
+							
+							< capabilities update create delete admin
+
+    string vip_ip           : Service IP Address
+                            < regexp [:ip:]
+                            < example ::1
+                            < flags enabled visible required
+
+    string vip_port         : Service port
+                            < regexp [:numbers:]
+                            < example 80
+                            < flags enabled visible required
+
+    enum vip_alg            : Loadbalancing algorythm
+                            < default wrr
+
+    string vip_description  : Description
+							< tooltip An illustrative description of the loadbalanced server
+
+# ----------------------------------------------------------------------------
+
+
+# ============================================================================
+# ENUMS
+# ============================================================================
+enum master_slave
+    value master            : Master
+    value slave             : Slave
+
+enum vip_alg
+    rr                      : Round Robin
+	wrr                     : Weighted Round Robin
+	lc                      : Least Connection
+	wlc                     : Weighted Least Connection
+	lblc                    : Locality Based Least Connection
+	sh                      : Source Hashing
+	dh                      : Destination Hashing
+
+
+# ============================================================================
+# AUTHD
+# ============================================================================
+authd fileops
+	match rc.firewall		: /etc/openpanel
+							< user root
+							< group root
+							< perms 0700
+
+authd scripts
+	script iptables-update

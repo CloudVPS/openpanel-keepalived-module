@@ -1,0 +1,25 @@
+MODULE
+    - Master/Slave
+
+GLOBAL
+    - notification_email (array)
+    - notification_email_from
+    - relayserver (127.0.0.1)
+    - smtp_connect_timeout 30
+    - router_id (hostname)
+
+VRRP
+    - Group
+      = Ieder VRRP-instance
+      = notify_master (script als je master word)
+      = notify_backup (script als je backup word)
+      = notify_fault  (script als er iets mis gaat)
+      = smtp_alert (bool)
+    - Instance
+      = state (enum, master/slave)
+      = interface
+      = 
+VIP
+  -- Settings
+  -- Realserver
+  -- Sorryserver
