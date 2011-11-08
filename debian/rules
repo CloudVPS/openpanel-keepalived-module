@@ -16,7 +16,7 @@ install:
 	mkdir -p ${BUILD_ROOT}/var/openpanel/modules/Keepalived.module
 	install -m 755 action ${BUILD_ROOT}/var/openpanel/modules/Keepalived.module/action
 	cp module.xml ${BUILD_ROOT}/var/openpanel/modules/Keepalived.module/module.xml
-	#cp *.png ${BUILD_ROOT}/var/openpanel/modules/Keepalived.module/
+	cp *.png ${BUILD_ROOT}/var/openpanel/modules/Keepalived.module/
 	install -m 755 verify ${BUILD_ROOT}/var/openpanel/modules/Keepalived.module/verify
 
 build:
