@@ -31,10 +31,14 @@ class Meta:Keepalived		< uuid b7bdba75-f440-4d84-a5d5-ef7bfa4b78c0
 							< title HA
                             < description High availability settings
 							< sortindex 85
-							< explanation iptables.html
-							< icon firewall.png
+							< explanation keepalived.html
+							< icon keepalived.png
 							
 							< capabilities update admin
+                            < metatype base
+
+string id                   : Domain name
+                            < gridwidth 40
 							
 # ----------------------------------------------------------------------------
 class Keepalived:SLBMaster  < uuid efde574b-c31e-4ed8-8062-58c590f5c7a8
@@ -48,8 +52,10 @@ class Keepalived:SLBMaster  < uuid efde574b-c31e-4ed8-8062-58c590f5c7a8
 							< description Create Server LoadBalancing profiles
 							
 							< capabilities update create delete admin
+                            < metatype derived
+                            < metabase Meta:Keepalived
 
-    string vip_ip           : Service IP Address
+    string id               : Service IP Address
                             < regexp [:ip:]
                             < example ::1
                             < flags enabled visible required
@@ -88,11 +94,3 @@ enum vip_alg
 # ============================================================================
 # AUTHD
 # ============================================================================
-authd fileops
-	match rc.firewall		: /etc/openpanel
-							< user root
-							< group root
-							< perms 0700
-
-authd scripts
-	script iptables-update

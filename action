@@ -1,1 +1,23 @@
-exit 0
+#!/bin/bash
+. /var/openpanel/api/sh/module.sh
+
+Module.getconfig() {
+  cat << _EOF_
+  <openpanel.module>
+    <dict id="Meta:Keepalived" type="class">
+      <dict id="Keepalived:SLBMaster" type="class">
+        <dict id="keepalived" type="object">
+          <string id="id">*</string>
+        </dict>
+      </dict>
+    </dict>
+    <dict id="OpenCORE:Result">
+      <integer id="error">0</integer>
+      <string id="message">OK</string>
+    </dict>
+  </openpanel.module>
+_EOF_
+  exitquiet
+}
+
+implement Keepalived.module
