@@ -32,19 +32,28 @@ Module.create() {
 }
 
 Module.update() {
-    GLOBAL_DEFS=$(_create_global)
+    m_s=$(coreval Keepalived master_slave)
+    [ "${m_s}" = "slave" ] && exiterror "A slave should never be able to get into this function."
 
+    slave_present=$(coreval Keepalived slave_present)
+
+    GLOBAL_DEFS=$(_create_global)
     VIPCONF=""
     STATICS=""
+    VRRPS=""
     :>keepalived.conf
+
     for uuid in `coreval --loop Keepalived Keepalived:RSPool`; do
         for slbuuid in `coreval --loop Keepalived Keepalived:RSPool ${uuid} Keepalived:SLBMaster`; do
-            STATIC=$(_create_vip_static ${uuid} ${slbuuid})
+            [ "X${slave_present}" = "X" ] && STATIC=$(_create_vip_static ${uuid} ${slbuuid})
+            [ "X${slave_present}" = "X" ] || VRRP=$(_create_vip_vrrp ${uuid} ${slbuuid})
+            [ "X${STATIC}" = "X" ]   || STATICS="${STATICS} ${STATIC}"
+            [ "X${VRRP}" = "X" ]   || VRRPS="${VRRPS} ${VRRP}"
+
             VIP=$(_create_vip ${uuid} ${slbuuid})
             VHOST=$(_get_vip_vhost ${uuid} ${slbuuid})
             POOL=$(_create_pool ${uuid} ${VHOST})
             [ "${POOL}" = "nohash" ] && exiterror "Could not create a hash of the URL to check (is the server alive?)"
-            [ "X${STATIC}" = "X" ]   || STATICS="${STATICS} ${STATIC}"
             VIPCONF="${VIPCONF}\n${VIP}\n${POOL}\n}"
         done
     done
@@ -56,11 +65,57 @@ Module.update() {
     [ "X${STATICCONF}" = "X" ] || echo -e "${STATICCONF}" >> keepalived.conf
     echo -e "${VIPCONF}" >> keepalived.conf
 
+    authd installfile keepalived.conf /etc/keepalived/
+    authd reloadservice keepalived
     exitok
 }
 
 Module.delete() {
     Module.update
+    exitok
+}
+
+Keepalived:Slave.listobjects() {
+    m_s=$(coreval Keepalived master_slave)
+    [ "${m_s}" = "master" ] && exiterror "These settings are unavailable because this machine is a slave"
+
+    USERID=$(id -u openpanel-ha 2> /dev/null)
+    [ "X${USERID}" = "X" ] && adduser --system --no-create-home --gecos "Openpanel HA user" --disabled-password --ingroup openpaneluser openpanel-ha
+
+    USERID=$(id -u openpanel-ha 2> /dev/null)
+    [ "X${USERID}" = "X" ] && exiterror "I can not find/create a user for Openpanel HA settings"
+
+    GROUPID=$(id -g openpanel-ha)
+    
+    if [ ! -f /etc/openpanel/ha/id_rsa ]; then
+        ssh-keygen -f ./id_rsa -t rsa -q -N ""
+        authd installfile id_rsa /etc/openpanel/ha
+        authd installfile id_rsa.pub /etc/openpanel/ha
+    fi
+
+    slave_prio=$(coreval Keepalived:Slave slave_prio)
+    slave_master_ip=$(coreval Keepalived:Slave slave_master_ip)
+    slave_key=$(coreval Keepalived:Slave slave_key)
+    
+    cat << _EOF_
+<?xml version="1.0" encoding="UTF-8"?>
+<dict>
+  <dict id="objects">
+    <dict id="Keepalived:Slave" type="class">
+      <dict id="kslave" type="object">
+        <string id="slave_prio">${slave_prio}</string>
+        <string id="slave_master_ip">${slave_master_ip}</string>
+        <textarea id="slave_key">${slave_key}</textarea>
+      </dict>
+    </dict>
+  </dict>
+  <dict id="OpenCORE:Result">
+    <integer id="error">0</integer>
+    <string id="message">OK</string>
+  </dict>
+</dict>
+_EOF_
+
     exitok
 }
 

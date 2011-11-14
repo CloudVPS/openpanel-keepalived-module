@@ -54,6 +54,29 @@ class Keepalived            < uuid b7bdba75-f440-4d84-a5d5-ef7bfa4b78c0
                             < tooltip This name will be used in notifications so you know which machine sent it
 
 # ----------------------------------------------------------------------------
+class Keepalived:Slaves     < uuid bc51994d-8987-4e44-add4-37afdd101fd0
+                            < version 1
+                            < requires Keepalived
+                            < indexing auto
+                            < uniquein parent
+                            < allchildren true
+                            < shortname rspool
+                            < sortindex 90
+                            < title Slave servers
+                            < description Create slave servers
+                            < capabilities update create delete admin
+                            < listview id slave_ip slave_key slave_description
+                            < required id slave_ip slave_key
+
+    string slave_ip         : Slave IP Address
+                            < regexp [:ip:] 
+
+    textarea slave_key      : Slave SSH-pubkey
+
+    string slave_description    : Description
+                                < tooltip An illustrative description of this pool
+
+# ----------------------------------------------------------------------------
 class Keepalived:RSPool     < uuid a48532dc-4799-4a9e-a504-964db9659690
                             < version 1
                             < requires Keepalived
@@ -148,6 +171,30 @@ class Keepalived:SLBMaster  < uuid efde574b-c31e-4ed8-8062-58c590f5c7a8
     string vip_description  : Description
                             < tooltip An illustrative description for this front-end service
 
+# ----------------------------------------------------------------------------
+class Keepalived:Slave      < uuid d8d2cd1c-3420-4030-8aeb-72fa15d91aad
+                            < version 1
+                            < requires Keepalived
+                            < indexing auto
+                            < uniquein class
+                            < dynamic true
+                            < allchildren true
+                            < shortname kslave
+                            < sortindex 90
+                            < title Slave settings
+                            < description Configure HA Slave settings
+                            < capabilities update admin
+                            < listview id slave_prio slave_key slave_master_ip
+                            < required id slave_prio slave_key slave_master_ip
+
+    string slave_prio       : Slave priority
+                            < regexp [:numbers:]
+
+    string slave_master_ip  : Master IP Address
+                            < regexp [:ip:] 
+
+    textarea slave_key      : Master SSH-key
+                            < flags disabled
 
 # ============================================================================
 # ENUMS
@@ -174,3 +221,21 @@ enum rsp_healthcheck
 # ============================================================================
 # AUTHD
 # ============================================================================
+authd fileops
+    match id_rsa            : /etc/openpanel/ha
+                            < user openpanel-ha
+                            < group openpaneluser
+                            < perms 0006
+
+    match id_rsa.pub        : /etc/openpanel/ha
+                            < user openpanel-ha
+                            < group openpaneluser
+                            < perms 0644
+
+    match keepalived.conf   : /etc/keepalived
+                            < user root
+                            < group root
+                            < perms 0644
+
+authd services
+    service keepalived

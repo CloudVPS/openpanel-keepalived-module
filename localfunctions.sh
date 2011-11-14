@@ -134,6 +134,18 @@ _create_vip_static() {
     egrep -q "^addr.*\t${VIP_IP}\t.*" /etc/openpanel/networking.def  || echo ${VIP_IP}
 }
 
+_create_vip_vrrp() {
+    RSP_UUID=$1
+    VIP_UUID=$2
+
+    VIP_IP=$(coreval    Keepalived Keepalived:RSPool ${RSP_UUID} Keepalived:SLBMaster ${VIP_UUID} vip_ip)
+
+    [ -f /etc/openpanel/networking.def ] || exiterror "Could not determine if ${VIP_IP} is present. Is Networking.module installed?"
+
+    egrep -q "^addr.*\t${VIP_IP}\t.*" /etc/openpanel/networking.def  && exiterror "VRRP can not be configured if ${VIP_IP} is actively configured on one of your interfaces"
+    egrep -q "^addr.*\t${VIP_IP}\t.*" /etc/openpanel/networking.def  || echo ${VIP_IP}
+}
+
 function _create_statics() {
     STATICS="$1"
 
