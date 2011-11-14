@@ -10,68 +10,143 @@
 # OpenPanel Keepalived.module for loadbalancing/vrrp configuration
 # ============================================================================
 module Keepalived           < uuid 6b8bda6c-5212-4f88-ae64-a5fa7487cba8
-							< version 1.0
-							< languages en_EN
-							< apitype grace
-							< getconfig true
-							< license GPLv3
-							< author OpenPanel
-							< url http://www.openpanel.com/
+                            < version 1.0
+                            < languages en_EN
+                            < apitype commandline
+                            < getconfig true
+                            < license GPLv3
+                            < author OpenPanel
+                            < url http://www.openpanel.com/
 
 
 # ============================================================================
 # CLASSES
 # ============================================================================
-class Meta:Keepalived		< uuid b7bdba75-f440-4d84-a5d5-ef7bfa4b78c0
-							< version 1
-							< indexing manual
-							< singleton keepalived
-							< allchildren true
-							< shortname keepalived
-							< title HA
-                            < description High availability settings
-							< sortindex 85
-							< explanation keepalived.html
-							< icon keepalived.png
-							
-							< capabilities update admin
-                            < metatype base
+class Keepalived            < uuid b7bdba75-f440-4d84-a5d5-ef7bfa4b78c0
+                            < version 1
+                            < indexing auto
+                            < allchildren true
+                            < uniquein class
+                            < shortname keepalived
+                            < singleton keepalived
+                            < title HA
+                            < description Loadbalancing and High Availability
+                            < sortindex 85
+                            < icon keepalived.png
+                            < capabilities update admin
+                            < explanation keepalived.html
+                            < listview id master_slave notifications router_id
+                            < required id master_slave router_id
 
-string id                   : Domain name
-                            < gridwidth 40
-							
+    enum master_slave       : Master or Slave
+                            < default master
+                            
+    bool slave_present      : A slave is present
+                            < default false
+                            < tooltip In case this is a master, selecting this checkbox will automatically enable VRRP
+
+    string notifications    : Send HA notifications to
+                            < example you@example.com
+                            < regexp [:email:]
+                            < tooltip Leave empty to disable notifications
+
+    string router_id        : Router ID
+                            < tooltip This name will be used in notifications so you know which machine sent it
+
 # ----------------------------------------------------------------------------
-class Keepalived:SLBMaster  < uuid efde574b-c31e-4ed8-8062-58c590f5c7a8
-							< version 1
-							< indexing manual
-							< uniquein class
-							< allchildren true
-							< shortname ha_master
-							< sortindex 90
-							< title SLB Master
-							< description Create Server LoadBalancing profiles
-							
-							< capabilities update create delete admin
-                            < metatype derived
-                            < metabase Meta:Keepalived
+class Keepalived:RSPool     < uuid a48532dc-4799-4a9e-a504-964db9659690
+                            < version 1
+                            < requires Keepalived
+                            < indexing auto
+                            < uniquein class
+                            < allchildren true
+                            < shortname rspool
+                            < sortindex 90
+                            < title Loadbalancing
+                            < description Create loadbalanced services
+                            < capabilities update create delete admin
+                            < listview id rsp_description rsp_healthcheck rsp_hc_tcp_port rsp_hc_url rsp_hc_retcode
+                            < required id rsp_description rsp_healthcheck
 
-    string id               : Service IP Address
+    string rsp_description  : Description
+                            < tooltip An illustrative description of this pool
+
+    enum rsp_healthcheck    : Healthcheck
+                            < default HTTP_GET
+                            < tooltip Which healthcheck to run on the realservers
+
+    string rsp_hc_tcp_port  : Healthcheck TCP port
+                            < tooltip Is only used for the TCP-check
+
+    string rsp_hc_url       : File to check with HTTP/SSL-check
+                            < regexp [:_urlvalid:]
+
+    string rsp_hc_retcode   : HTTP-Response to expect
+                            < default 200
+                            < regexp [:numbers:]
+
+# ----------------------------------------------------------------------------
+class Keepalived:Realserver < uuid bd6ca88e-5aa2-4bc6-8ec2-416ffda76c5a
+                            < version 1
+                            < requires Keepalived:RSPool
+                            < indexing auto
+                            < uniquein parent
+                            < allchildren true
+                            < shortname realservers
+                            < sortindex 90
+                            < title Back-end servers
+                            < description Create back-end servers used by a loadbalanced service
+                            < capabilities update create delete admin
+                            < listview id rs_ip rs_port rs_description rs_weight
+                            < required id rs_ip rs_port rs_description
+
+
+    string rs_ip            : Back-end IP Address
                             < regexp [:ip:]
                             < example ::1
-                            < flags enabled visible required
 
-    string vip_port         : Service port
+    string rs_port          : Back-end port
                             < regexp [:numbers:]
                             < example 80
-                            < flags enabled visible required
 
-    enum vip_alg            : Loadbalancing algorythm
+    string rs_weight        : Weight
+                            < regexp [:numbers:]
+                            < default 100
+
+    string rs_description   : Description
+                            < tooltip An illustrative description for this back-end server
+
+# ----------------------------------------------------------------------------
+class Keepalived:SLBMaster  < uuid efde574b-c31e-4ed8-8062-58c590f5c7a8
+                            < version 1
+                            < requires Keepalived:RSPool
+                            < indexing auto
+                            < uniquein parent
+                            < allchildren true
+                            < shortname vips
+                            < sortindex 90
+                            < title Front-end services
+                            < description Create front-end services
+                            < capabilities update create delete admin
+                            < listview id vip_ip vip_port vip_alg vip_description vip_vhost
+                            < required id vip_ip vip_port vip_alg
+
+    string vip_ip           : Front-end IP Address
+                            < regexp [:ip:]
+                            < example ::1
+
+    string vip_port         : Front-end port
+                            < regexp [:numbers:]
+                            < example 80
+
+    string vip_vhost        : Vhost used for healthchecking
+                            < regexp [:hostname:]
+                            
+    enum vip_alg            : Loadbalancing algorithm
                             < default wrr
 
     string vip_description  : Description
-							< tooltip An illustrative description of the loadbalanced server
-
-# ----------------------------------------------------------------------------
+                            < tooltip An illustrative description for this front-end service
 
 
 # ============================================================================
@@ -83,13 +158,18 @@ enum master_slave
 
 enum vip_alg
     rr                      : Round Robin
-	wrr                     : Weighted Round Robin
-	lc                      : Least Connection
-	wlc                     : Weighted Least Connection
-	lblc                    : Locality Based Least Connection
-	sh                      : Source Hashing
-	dh                      : Destination Hashing
+    wrr                     : Weighted Round Robin
+    lc                      : Least Connection
+    wlc                     : Weighted Least Connection
+    lblc                    : Locality Based Least Connection
+    sh                      : Source Hashing
+    dh                      : Destination Hashing
 
+enum rsp_healthcheck
+    HTTP_GET                : HTTP
+    SSL_GET                 : HTTPS
+    TCP_CHECK               : TCP on port ..
+    SMTP_CHECK              : SMTP
 
 # ============================================================================
 # AUTHD

@@ -1,14 +1,15 @@
 #!/bin/bash
 . /var/openpanel/api/sh/module.sh
+. /var/openpanel/modules/Keepalived.module/localfunctions.sh
 
 Module.getconfig() {
+    ROUTERID=$(hostname -f)
   cat << _EOF_
   <openpanel.module>
-    <dict id="Meta:Keepalived" type="class">
-      <dict id="Keepalived:SLBMaster" type="class">
-        <dict id="keepalived" type="object">
-          <string id="id">*</string>
-        </dict>
+    <dict id="Keepalived" type="class">
+      <dict id="keepalived" type="object">
+        <enum id="master_slave">master</enum>
+        <string id="router_id">${ROUTERID}</string
       </dict>
     </dict>
     <dict id="OpenCORE:Result">
@@ -18,6 +19,49 @@ Module.getconfig() {
   </openpanel.module>
 _EOF_
   exitquiet
+}
+
+Module.create() {
+    m_s=$(coreval Keepalived master_slave)
+
+    [ "${m_s}" = "slave" ] && exiterror "You can not create objects on a slave"
+
+    Module.update
+
+    exitok
+}
+
+Module.update() {
+    GLOBAL_DEFS=$(_create_global)
+
+    VIPCONF=""
+    STATICS=""
+    :>keepalived.conf
+    for uuid in `coreval --loop Keepalived Keepalived:RSPool`; do
+        for slbuuid in `coreval --loop Keepalived Keepalived:RSPool ${uuid} Keepalived:SLBMaster`; do
+            STATIC=$(_create_vip_static ${uuid} ${slbuuid})
+            VIP=$(_create_vip ${uuid} ${slbuuid})
+            VHOST=$(_get_vip_vhost ${uuid} ${slbuuid})
+            POOL=$(_create_pool ${uuid} ${VHOST})
+            [ "${POOL}" = "nohash" ] && exiterror "Could not create a hash of the URL to check (is the server alive?)"
+            [ "X${STATIC}" = "X" ]   || STATICS="${STATICS} ${STATIC}"
+            VIPCONF="${VIPCONF}\n${VIP}\n${POOL}\n}"
+        done
+    done
+
+    STATICCONF=$(_create_statics "${STATICS}")
+    [ "${STATICCONF}" = "noint" ] && exiterror "Could not determine which interface to use for VIP addresses"
+
+    echo "${GLOBAL_DEFS}" >> keepalived.conf
+    [ "X${STATICCONF}" = "X" ] || echo -e "${STATICCONF}" >> keepalived.conf
+    echo -e "${VIPCONF}" >> keepalived.conf
+
+    exitok
+}
+
+Module.delete() {
+    Module.update
+    exitok
 }
 
 implement Keepalived.module
