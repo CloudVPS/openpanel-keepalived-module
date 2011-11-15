@@ -41,10 +41,6 @@ class Keepalived            < uuid b7bdba75-f440-4d84-a5d5-ef7bfa4b78c0
     enum master_slave       : Master or Slave
                             < default master
                             
-    bool slave_present      : A slave is present
-                            < default false
-                            < tooltip In case this is a master, selecting this checkbox will automatically enable VRRP
-
     string notifications    : Send HA notifications to
                             < example you@example.com
                             < regexp [:email:]
@@ -52,6 +48,14 @@ class Keepalived            < uuid b7bdba75-f440-4d84-a5d5-ef7bfa4b78c0
 
     string router_id        : Router ID
                             < tooltip This name will be used in notifications so you know which machine sent it
+
+    string external_iface   : External interface
+                            < default eth0
+                            < tooltip This interface will be used to bind loadbalanced IPs on
+
+    string syncd_iface      : Syncd interface
+                            < default eth0
+                            < tooltip This interface will be used to sync connections to the slaves
 
 # ----------------------------------------------------------------------------
 class Keepalived:Slaves     < uuid bc51994d-8987-4e44-add4-37afdd101fd0
@@ -175,8 +179,8 @@ class Keepalived:SLBMaster  < uuid efde574b-c31e-4ed8-8062-58c590f5c7a8
 class Keepalived:Slave      < uuid d8d2cd1c-3420-4030-8aeb-72fa15d91aad
                             < version 1
                             < requires Keepalived
-                            < indexing m
-                            < uniquein class
+                            < indexing manual
+                            < uniquein parent
                             < dynamic true
                             < allchildren true
                             < shortname kslave
@@ -194,7 +198,7 @@ class Keepalived:Slave      < uuid d8d2cd1c-3420-4030-8aeb-72fa15d91aad
                             < regexp [:ip:] 
 
     textarea slave_key      : Master SSH-key
-                            < flags visible readonly
+                            < flags visible 
 
 # ============================================================================
 # ENUMS
@@ -231,6 +235,11 @@ authd fileops
                             < user openpanel-ha
                             < group openpaneluser
                             < perms 0600
+
+    match authorized_keys   : /etc/openpanel/ha/.ssh
+                            < user openpanel-ha
+                            < group openpaneluser
+                            < perms 0644
 
     match *                 : /etc/openpanel/ha
                             < user openpanel-ha

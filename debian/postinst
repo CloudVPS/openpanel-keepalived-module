@@ -28,6 +28,21 @@ set -e
 
 case "$1" in
     configure)
+        grep -q ip_vs /etc/modules || {
+            echo ip_vs >> /etc/modules
+            /etc/init.d/module-init-tools restart
+        }
+        id openpanel-ha > /dev/null 2>&1 || {
+            adduser --system --no-create-home --gecos "Openpanel HA user" \
+                --disabled-password --ingroup openpaneluser \
+                --home /etc/openpanel/ha openpanel-ha
+        }
+
+        mkdir -p /etc/openpanel/ha
+        mkdir -p /etc/openpanel/ha/.ssh
+        chown -R openpanel-ha:openpaneluser /etc/openpanel/ha
+        chmod 700 /etc/openpanel/ha/.ssh
+
     ;;
 
     abort-upgrade|abort-remove|abort-deconfigure)

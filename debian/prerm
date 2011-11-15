@@ -18,7 +18,13 @@ set -e
 
 
 case "$1" in
-    remove|upgrade|deconfigure)
+    upgrade|deconfigure)
+    ;;
+    remove)
+        grep -q openpanel-ha: /etc/passwd && {
+            echo "Removing openpanel-ha user..."
+            deluser openpanel-ha
+        }
     ;;
 
     failed-upgrade)

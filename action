@@ -22,9 +22,9 @@ _EOF_
 }
 
 Module.create() {
-    #m_s=$(coreval Keepalived master_slave)
+    m_s=$(coreval Keepalived master_slave)
 
-    #[ "${m_s}" = "slave" ] && exiterror "You can not create objects on a slave"
+    [ "${m_s}" = "slave" ] && exiterror "You can not create objects on a slave"
 
     Module.update
 
@@ -33,40 +33,69 @@ Module.create() {
 
 Module.update() {
     m_s=$(coreval Keepalived master_slave)
-    [ "${m_s}" = "slave" ] && exitok
 
-    slave_present=$(coreval Keepalived slave_present)
+    if [ "${m_s}" = "slave" ]; then
+        echo "slave" > active_slave
+        authd installfile active_slave /etc/openpanel/ha
+        exitok
+    else
+        authd deletefile /etc/openpanel/ha/active_slave
+    fi 
+    
+    external_iface=$(coreval Keepalived external_iface)
+    syncd_iface=$(coreval Keepalived syncd_iface)
 
     GLOBAL_DEFS=$(_create_global)
     VIPCONF=""
     STATICS=""
     VRRPS=""
-    :>keepalived.conf
+    :>keepalived_template.conf
+    :>authorized_keys
+
+    for uuid in `coreval --loop Keepalived Keepalived:Slaves`; do
+        ipaddr=$(coreval Keepalived Keepalived:Slaves ${uuid} slave_ip)
+        key=$(coreval Keepalived Keepalived:Slaves ${uuid} slave_key)
+        descr=$(coreval Keepalived Keepalived:Slaves ${uuid} slave_description)
+
+        echo -e "#${descr}:\nfrom=\"${ipaddr}\" ${key}" >> authorized_keys
+    done
+
+    [ -s authorized_keys ] && authd installfile authorized_keys /etc/openpanel/ha/.ssh/
+    [ -s authorized_keys ] || authd deletefile /etc/openpanel/ha/.ssh/authorized_keys
+    [ -s authorized_keys -a "X${syncd_iface}" = "X" ] && exiterror "You need to configure the syncd interface for VRRP to work"
 
     for uuid in `coreval --loop Keepalived Keepalived:RSPool`; do
         for slbuuid in `coreval --loop Keepalived Keepalived:RSPool ${uuid} Keepalived:SLBMaster`; do
-            [ "X${slave_present}" = "X" ] && STATIC=$(_create_vip_static ${uuid} ${slbuuid})
-            [ "X${slave_present}" = "X" ] || VRRP=$(_create_vip_vrrp ${uuid} ${slbuuid})
+            [ -s authorized_keys ] || STATIC=$(_create_vip_static ${uuid} ${slbuuid})
+            [ -s authorized_keys ] && VRRP=$(_create_vip_static ${uuid} ${slbuuid})
+
             [ "X${STATIC}" = "X" ]   || STATICS="${STATICS} ${STATIC}"
             [ "X${VRRP}" = "X" ]   || VRRPS="${VRRPS} ${VRRP}"
 
             VIP=$(_create_vip ${uuid} ${slbuuid})
             VHOST=$(_get_vip_vhost ${uuid} ${slbuuid})
             POOL=$(_create_pool ${uuid} ${VHOST})
-            [ "${POOL}" = "nohash" ] && exiterror "Could not create a hash of the URL to check (is the server alive?)"
+            echo "${POOL}" | grep -q "nohash$" && exiterror "Could not create a hash of the URL to check (is the server alive?)"
             VIPCONF="${VIPCONF}\n${VIP}\n${POOL}\n}"
         done
     done
 
-    STATICCONF=$(_create_statics "${STATICS}")
-    [ "${STATICCONF}" = "noint" ] && exiterror "Could not determine which interface to use for VIP addresses"
+    [ "X${STATICS}" = "X" ] || STATICCONF=$(_create_statics "${STATICS}")
+    [ "X${VRRPS}" = "X" ]   || VRRPCONF=$(_create_vrrp "${VRRPS}")
 
-    echo "${GLOBAL_DEFS}" >> keepalived.conf
-    [ "X${STATICCONF}" = "X" ] || echo -e "${STATICCONF}" >> keepalived.conf
-    echo -e "${VIPCONF}" >> keepalived.conf
+    echo "${GLOBAL_DEFS}" >> keepalived_template.conf
+    [ "X${STATICCONF}" = "X" ] || echo -e "${STATICCONF}" >> keepalived_template.conf
+    [ "X${VRRPCONF}" = "X" ]   || echo -e "${VRRPCONF}" >> keepalived_template.conf
+    echo -e "${VIPCONF}" >> keepalived_template.conf
 
+    cat keepalived_template.conf | \
+        sed -e 's/@STATE@/MASTER/' \
+        sed -e "s/@EXTINTF@/${external_iface}/" \
+        sed -e "s/@SYNCINTF@/${syncd_iface}/"   \
+        sed -e "s/@PRIO@/100/" > keepalived.conf
     authd installfile keepalived.conf /etc/keepalived/
-    authd reloadservice keepalived
+
+#    authd reloadservice keepalived
     exitok
 }
 
@@ -76,19 +105,15 @@ Module.delete() {
 }
 
 Keepalived:Slave.listobjects() {
-    USERID=$(id -u openpanel-ha 2> /dev/null)
-    [ "X${USERID}" = "X" ] && authd runscript keepalived-create-slave-user
-
     if [ ! -f /etc/openpanel/ha/id_rsa ]; then
         rm -f id_rsa id_rsa.pub 
         ssh-keygen -f ./id_rsa -t rsa -q -N ""
-        authd makedir /etc/openpanel/ha
         authd installfile id_rsa /etc/openpanel/ha
         authd installfile id_rsa.pub /etc/openpanel/ha
     fi
 
     slave_prio=$(cat /etc/openpanel/ha/prio)
-    slave_master_ip=$(cat /etc/openpanel/ha/master)
+    slave_master_ip=$(cat /etc/openpanel/ha/slave_master_ip)
     slave_key=$(cat /etc/openpanel/ha/id_rsa.pub)
     
     cat << _EOF_
@@ -120,10 +145,12 @@ Keepalived:Slave.update() {
     slave_key=$(coreval Keepalived:Slave slave_key)
 
     echo ${slave_prio} > prio
-    echo slave_master_ip > slave_master_ip
+    echo ${slave_master_ip} > slave_master_ip
 
     authd installfile prio /etc/openpanel/ha
     authd installfile slave_master_ip /etc/openpanel/ha
+
+    exitok
 }
 
 implement Keepalived.module

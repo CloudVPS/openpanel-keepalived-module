@@ -1,3 +1,0 @@
-#!/bin/sh
-
-adduser --system --no-create-home --gecos "Openpanel HA user" --disabled-password --ingroup openpaneluser --home /etc/openpanel/ha openpanel-ha

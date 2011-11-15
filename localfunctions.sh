@@ -1,7 +1,7 @@
 
 fatal() {
     echo $1
-    exit
+    exit 1
 }
 
 _create_global() {
@@ -31,7 +31,7 @@ _create_pool() {
         RSP_HC_PORT=$(coreval Keepalived Keepalived:RSPool ${uuid} rsp_hc_tcp_port)
     fi
 
-    coreval --loop Keepalived Keepalived:RSPool ${uuid} Keepalived:Realserver | while read rsuuid; do
+    for rsuuid in `coreval --loop Keepalived Keepalived:RSPool ${uuid} Keepalived:Realserver`; do
         RS_IP=$(coreval Keepalived Keepalived:RSPool ${uuid} Keepalived:Realserver ${rsuuid} rs_ip)
         RS_PORT=$(coreval Keepalived Keepalived:RSPool ${uuid} Keepalived:Realserver ${rsuuid} rs_port)
         RS_WEIGHT=$(coreval Keepalived Keepalived:RSPool ${uuid} Keepalived:Realserver ${rsuuid} rs_weight)
@@ -170,3 +170,47 @@ _EOF_
     fi
 }
 
+function _create_vrrp() {
+    STATICS="$1"
+
+    RET=""
+
+    VRRP_PASS=$(hostname -f | md5sum | awk ' { print $1 } ')
+    VRID=$(echo ${VRRP_PASS} | tr '[a-z]' ' ' | sed -e 's/ //g' | cut -c1-2)
+
+    for s in ${STATICS}; do
+        SUFFIX="/32"
+        echo $s | grep -q : && SUFFIX="/128"
+        RET="${RET}\t${s}${SUFFIX} dev @EXTINTF@\n"
+    done
+    
+    if [ "X${RET}" != "X" ]; then
+        cat <<_EOF_
+vrrp_sync_group VG_1 {
+    group {
+        loadbalanced_vrrp
+    }
+    smtp_alert
+}
+vrrp_instance loadbalanced_vrrp {
+    state @STATE@
+    interface @EXTINTF@
+    dont_track_primary
+    lvs_sync_daemon_interface @SYNCINTF@
+    garp_master_delay 10
+    virtual_router_id ${VRID}
+    priority @PRIO@
+    advert_int 1
+    authentication {
+        auth_type PASS
+        auth_pass ${VRRP_PASS}
+    }
+    virtual_ipaddress {
+        ${RET}
+    }
+    smtp_alert
+}
+
+_EOF_
+    fi
+}
