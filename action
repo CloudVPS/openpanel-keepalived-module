@@ -22,9 +22,9 @@ _EOF_
 }
 
 Module.create() {
-    m_s=$(coreval Keepalived master_slave)
+    #m_s=$(coreval Keepalived master_slave)
 
-    [ "${m_s}" = "slave" ] && exiterror "You can not create objects on a slave"
+    #[ "${m_s}" = "slave" ] && exiterror "You can not create objects on a slave"
 
     Module.update
 
@@ -33,7 +33,7 @@ Module.create() {
 
 Module.update() {
     m_s=$(coreval Keepalived master_slave)
-    [ "${m_s}" = "slave" ] && exiterror "A slave should never be able to get into this function."
+    [ "${m_s}" = "slave" ] && exitok
 
     slave_present=$(coreval Keepalived slave_present)
 
@@ -76,26 +76,20 @@ Module.delete() {
 }
 
 Keepalived:Slave.listobjects() {
-    m_s=$(coreval Keepalived master_slave)
-    [ "${m_s}" = "master" ] && exiterror "These settings are unavailable because this machine is a slave"
-
     USERID=$(id -u openpanel-ha 2> /dev/null)
-    [ "X${USERID}" = "X" ] && adduser --system --no-create-home --gecos "Openpanel HA user" --disabled-password --ingroup openpaneluser openpanel-ha
+    [ "X${USERID}" = "X" ] && authd runscript keepalived-create-slave-user
 
-    USERID=$(id -u openpanel-ha 2> /dev/null)
-    [ "X${USERID}" = "X" ] && exiterror "I can not find/create a user for Openpanel HA settings"
-
-    GROUPID=$(id -g openpanel-ha)
-    
     if [ ! -f /etc/openpanel/ha/id_rsa ]; then
+        rm -f id_rsa id_rsa.pub 
         ssh-keygen -f ./id_rsa -t rsa -q -N ""
+        authd makedir /etc/openpanel/ha
         authd installfile id_rsa /etc/openpanel/ha
         authd installfile id_rsa.pub /etc/openpanel/ha
     fi
 
-    slave_prio=$(coreval Keepalived:Slave slave_prio)
-    slave_master_ip=$(coreval Keepalived:Slave slave_master_ip)
-    slave_key=$(coreval Keepalived:Slave slave_key)
+    slave_prio=$(cat /etc/openpanel/ha/prio)
+    slave_master_ip=$(cat /etc/openpanel/ha/master)
+    slave_key=$(cat /etc/openpanel/ha/id_rsa.pub)
     
     cat << _EOF_
 <?xml version="1.0" encoding="UTF-8"?>
@@ -106,6 +100,7 @@ Keepalived:Slave.listobjects() {
         <string id="slave_prio">${slave_prio}</string>
         <string id="slave_master_ip">${slave_master_ip}</string>
         <textarea id="slave_key">${slave_key}</textarea>
+	<string id="class">Keepalived:Slave</string>
       </dict>
     </dict>
   </dict>
@@ -117,6 +112,18 @@ Keepalived:Slave.listobjects() {
 _EOF_
 
     exitok
+}
+
+Keepalived:Slave.update() {
+    slave_prio=$(coreval Keepalived:Slave slave_prio)
+    slave_master_ip=$(coreval Keepalived:Slave slave_master_ip)
+    slave_key=$(coreval Keepalived:Slave slave_key)
+
+    echo ${slave_prio} > prio
+    echo slave_master_ip > slave_master_ip
+
+    authd installfile prio /etc/openpanel/ha
+    authd installfile slave_master_ip /etc/openpanel/ha
 }
 
 implement Keepalived.module

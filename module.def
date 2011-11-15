@@ -60,7 +60,7 @@ class Keepalived:Slaves     < uuid bc51994d-8987-4e44-add4-37afdd101fd0
                             < indexing auto
                             < uniquein parent
                             < allchildren true
-                            < shortname rspool
+                            < shortname slaves
                             < sortindex 90
                             < title Slave servers
                             < description Create slave servers
@@ -175,7 +175,7 @@ class Keepalived:SLBMaster  < uuid efde574b-c31e-4ed8-8062-58c590f5c7a8
 class Keepalived:Slave      < uuid d8d2cd1c-3420-4030-8aeb-72fa15d91aad
                             < version 1
                             < requires Keepalived
-                            < indexing auto
+                            < indexing m
                             < uniquein class
                             < dynamic true
                             < allchildren true
@@ -194,7 +194,7 @@ class Keepalived:Slave      < uuid d8d2cd1c-3420-4030-8aeb-72fa15d91aad
                             < regexp [:ip:] 
 
     textarea slave_key      : Master SSH-key
-                            < flags disabled
+                            < flags visible readonly
 
 # ============================================================================
 # ENUMS
@@ -222,12 +222,17 @@ enum rsp_healthcheck
 # AUTHD
 # ============================================================================
 authd fileops
+    match makedir           : /etc/openpanel/ha
+                            < user openpanel-ha
+                            < group openpaneluser
+                            < perms 0755
+
     match id_rsa            : /etc/openpanel/ha
                             < user openpanel-ha
                             < group openpaneluser
-                            < perms 0006
+                            < perms 0600
 
-    match id_rsa.pub        : /etc/openpanel/ha
+    match *                 : /etc/openpanel/ha
                             < user openpanel-ha
                             < group openpaneluser
                             < perms 0644
@@ -239,3 +244,6 @@ authd fileops
 
 authd services
     service keepalived
+
+authd scripts
+    script keepalived-create-slave-user

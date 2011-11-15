@@ -18,6 +18,9 @@ install:
 	cp module.xml ${BUILD_ROOT}/var/openpanel/modules/Keepalived.module/module.xml
 	cp *.png ${BUILD_ROOT}/var/openpanel/modules/Keepalived.module/
 	install -m 755 verify ${BUILD_ROOT}/var/openpanel/modules/Keepalived.module/verify
+	install -m 755 localfunctions.sh ${BUILD_ROOT}/var/openpanel/modules/Keepalived.module/localfunctions.sh
+	mkdir -p ${BUILD_ROOT}/var/openpanel/tools/
+	install -m 755 tools/keepalived-create-slave-user ${BUILD_ROOT}/var/openpanel/tools/keepalived-create-slave-user
 
 build:
 	mkmodulexml < module.def > module.xml
