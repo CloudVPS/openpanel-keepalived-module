@@ -36,7 +36,7 @@ class Keepalived            < uuid b7bdba75-f440-4d84-a5d5-ef7bfa4b78c0
                             < capabilities update admin
                             < explanation keepalived.html
                             < listview id master_slave notifications router_id
-                            < required id master_slave router_id
+                            < required id master_slave router_id notifications external_iface syncd_iface
 
     enum master_slave       : Master or Slave
                             < default master
@@ -56,6 +56,11 @@ class Keepalived            < uuid b7bdba75-f440-4d84-a5d5-ef7bfa4b78c0
     string syncd_iface      : Syncd interface
                             < default eth0
                             < tooltip This interface will be used to sync connections to the slaves
+
+    string nat_gw_ip        : NAT GW IP
+                            < example 192.168.1.254
+                            < tooltip This IP will be bound by VRRP and should be used as the gateway by your realservers
+
 
 # ----------------------------------------------------------------------------
 class Keepalived:Slaves     < uuid bc51994d-8987-4e44-add4-37afdd101fd0
@@ -246,7 +251,7 @@ authd fileops
                             < group openpaneluser
                             < perms 0644
 
-    match keepalived.conf   : /etc/keepalived
+    match keepalived*.conf  : /etc/keepalived
                             < user root
                             < group root
                             < perms 0644

@@ -1,0 +1,40 @@
+#!/bin/bash
+
+fatal() {
+    echo $1
+    exit 1
+}
+
+SDIR=/etc/openpanel/ha
+
+# Don't run if we aren't an active slave
+[ -f "${SDIR}/active_slave" ] || exit 0
+
+MASTER=$(cat "${SDIR}/slave_master_ip")
+PRIO=$(cat "${SDIR}/prio")
+EXTERNAL_IFACE=$(cat "${SDIR}/external_iface")
+SYNCD_IFACE=$(cat "${SDIR}/syncd_iface")
+ROUTERID=$(cat "${SDIR}/routerid")
+NOTIFICATION_EMAIL=$(cat "${SDIR}/notifications")
+
+
+[ -z "${PRIO}" -o -z "${MASTER}" ] && fatal "Invalid values for master ip or priority"
+[ -z "${SYNCD_IFACE}" -o -z "${EXTERNAL_IFACE}" ] && fatal "External and/or syncd interface is not set"
+[ -f "${SDIR}/id_rsa" ] || fatal "There is no ssh-key I can use to login to the master"
+
+scp -q -o StrictHostKeyChecking=no \
+    -i "${SDIR}/id_rsa" \
+    openpanel-ha@${MASTER}:/etc/keepalived/keepalived_template.conf \
+    /tmp/
+
+[ $? -eq 0 ] && {
+    cat /tmp/keepalived_template.conf | \
+        sed -e "s/@ROUTERID@/${ROUTERID}/" | \
+        sed -e "s/@NOTIFICATIONS@/${NOTIFICATION_EMAIL}/" | \
+        sed -e "s/@EXTINTF@/${EXTERNAL_IFACE}/" | \
+        sed -e "s/@SYNCINTF@/${SYNCD_IFACE}/" | \
+        sed -e "s/@PRIO@/${PRIO}/" > /etc/keepalived/keepalived.conf
+
+    /etc/init.d/keepalived reload
+}
+

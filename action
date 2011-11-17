@@ -34,17 +34,31 @@ Module.create() {
 Module.update() {
     m_s=$(coreval Keepalived master_slave)
 
+    external_iface=$(coreval Keepalived external_iface)
+    syncd_iface=$(coreval Keepalived syncd_iface)
+    nat_gw_ip=$(coreval Keepalived nat_gw_ip)
+    notification_email=$(coreval Keepalived notifications)
+    router_id=$(coreval Keepalived router_id)
+
+    [ -z "${external_iface}" ] && exiterror "No external interface defined"
+    [ -z "${syncd_iface}" ] && exiterror "No syncd interface defined"
+
     if [ "${m_s}" = "slave" ]; then
         echo "slave" > active_slave
+        echo "${external_iface}" > external_iface
+        echo "${syncd_iface}" > syncd_iface
+        echo "${notification_email}" > notifications
+        echo "${router_id}" > routerid
         authd installfile active_slave /etc/openpanel/ha
+        authd installfile external_iface /etc/openpanel/ha
+        authd installfile syncd_iface /etc/openpanel/ha
+        authd installfile notifications /etc/openpanel/ha
+        authd installfile routerid /etc/openpanel/ha
         exitok
     else
         authd deletefile /etc/openpanel/ha/active_slave
     fi 
     
-    external_iface=$(coreval Keepalived external_iface)
-    syncd_iface=$(coreval Keepalived syncd_iface)
-
     GLOBAL_DEFS=$(_create_global)
     VIPCONF=""
     STATICS=""
@@ -63,6 +77,9 @@ Module.update() {
     [ -s authorized_keys ] && authd installfile authorized_keys /etc/openpanel/ha/.ssh/
     [ -s authorized_keys ] || authd deletefile /etc/openpanel/ha/.ssh/authorized_keys
     [ -s authorized_keys -a "X${syncd_iface}" = "X" ] && exiterror "You need to configure the syncd interface for VRRP to work"
+    [ -s authorized_keys -a "X${nat_gw_ip}" = "X" ] && exiterror "You need to configure the NAT GW IP for VRRP to work"
+
+    [ "X${nat_gw_ip}" = "X" ] || VRRPS="${VRRPS} ${nat_gw_ip}/32"
 
     for uuid in `coreval --loop Keepalived Keepalived:RSPool`; do
         for slbuuid in `coreval --loop Keepalived Keepalived:RSPool ${uuid} Keepalived:SLBMaster`; do
@@ -86,16 +103,18 @@ Module.update() {
     echo "${GLOBAL_DEFS}" >> keepalived_template.conf
     [ "X${STATICCONF}" = "X" ] || echo -e "${STATICCONF}" >> keepalived_template.conf
     [ "X${VRRPCONF}" = "X" ]   || echo -e "${VRRPCONF}" >> keepalived_template.conf
-    echo -e "${VIPCONF}" >> keepalived_template.conf
+    [ "X${VIPCONF}" = "X" ]    || echo -e "${VIPCONF}" >> keepalived_template.conf
 
     cat keepalived_template.conf | \
-        sed -e 's/@STATE@/MASTER/' \
-        sed -e "s/@EXTINTF@/${external_iface}/" \
-        sed -e "s/@SYNCINTF@/${syncd_iface}/"   \
+        sed -e "s/@EXTINTF@/${external_iface}/" | \
+        sed -e "s/@SYNCINTF@/${syncd_iface}/"   | \
+        sed -e "s/@NOTIFICATIONS@/${notification_email}/"   | \
+        sed -e "s/@ROUTERID@/${router_id}/"   | \
         sed -e "s/@PRIO@/100/" > keepalived.conf
     authd installfile keepalived.conf /etc/keepalived/
+    authd installfile keepalived_template.conf /etc/keepalived/
 
-#    authd reloadservice keepalived
+    authd reloadservice keepalived
     exitok
 }
 

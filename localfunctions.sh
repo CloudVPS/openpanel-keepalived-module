@@ -5,16 +5,13 @@ fatal() {
 }
 
 _create_global() {
-    notification_email=$(coreval Keepalived notifications)
-    router_id=$(coreval Keepalived router_id)
-
 cat << _EOF_
 global_defs {
     notification_email {
-        ${notification_email}
+        @NOTIFICATIONS@
     }
-    notification_email_from ${notification_email}
-    router_id ${router_id}
+    notification_email_from @NOTIFICATIONS@
+    router_id @ROUTERID@
 }
 _EOF_
 }
@@ -105,7 +102,7 @@ _create_vip() {
 virtual_server ${VIP_IP} ${VIP_PORT} {
     delay_loop 30
     lb_algo ${VIP_ALG}
-    lb_kind DR
+    lb_kind NAT
     persistence_timeout 50
     protocol TCP
     persistence_granularity 32
@@ -193,7 +190,7 @@ vrrp_sync_group VG_1 {
     smtp_alert
 }
 vrrp_instance loadbalanced_vrrp {
-    state @STATE@
+    state BACKUP
     interface @EXTINTF@
     dont_track_primary
     lvs_sync_daemon_interface @SYNCINTF@
@@ -208,6 +205,7 @@ vrrp_instance loadbalanced_vrrp {
     virtual_ipaddress {
         ${RET}
     }
+    preempt_delay 60
     smtp_alert
 }
 
