@@ -79,19 +79,19 @@ Module.update() {
     [ -s authorized_keys -a "X${syncd_iface}" = "X" ] && exiterror "You need to configure the syncd interface for VRRP to work"
     [ -s authorized_keys -a "X${nat_gw_ip}" = "X" ] && exiterror "You need to configure the NAT GW IP for VRRP to work"
 
-    [ "X${nat_gw_ip}" = "X" ] || VRRPS="${VRRPS} ${nat_gw_ip}/32"
+    [ "X${nat_gw_ip}" = "X" ] || VRRPS="${VRRPS} ${nat_gw_ip}"
 
     for uuid in `coreval --loop Keepalived Keepalived:RSPool`; do
         for slbuuid in `coreval --loop Keepalived Keepalived:RSPool ${uuid} Keepalived:SLBMaster`; do
-            [ -s authorized_keys ] || STATIC=$(_create_vip_static ${uuid} ${slbuuid})
-            [ -s authorized_keys ] && VRRP=$(_create_vip_static ${uuid} ${slbuuid})
+            VIP_IP=$(_create_vip_static ${uuid} ${slbuuid}) || exiterror "${VIP_IP}"
+            [ -s authorized_keys ] || STATICS="${STATICS} ${VIP_IP}"
+            [ -s authorized_keys ] && VRRPS="${VRRPS} ${VIP_IP}"
 
-            [ "X${STATIC}" = "X" ]   || STATICS="${STATICS} ${STATIC}"
-            [ "X${VRRP}" = "X" ]   || VRRPS="${VRRPS} ${VRRP}"
-
+            echo ${VIP_IP} | grep -q : && VIP_TYPE="v6" || VIP_TYPE="v4"
             VIP=$(_create_vip ${uuid} ${slbuuid})
             VHOST=$(_get_vip_vhost ${uuid} ${slbuuid})
-            POOL=$(_create_pool ${uuid} ${VHOST})
+            POOL=$(_create_pool ${uuid} ${VHOST} ${VIP_TYPE})
+            echo "${POOL}" | grep -q "mix46" && exiterror "You cannot mix IPv4 and IPv6 Front- and Back-end IPs"
             echo "${POOL}" | grep -q "nohash$" && exiterror "Could not create a hash of the URL to check (is the server alive?)"
             VIPCONF="${VIPCONF}\n${VIP}\n${POOL}\n}"
         done

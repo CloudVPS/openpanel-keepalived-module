@@ -33,6 +33,10 @@ _create_pool() {
         RS_PORT=$(coreval Keepalived Keepalived:RSPool ${uuid} Keepalived:Realserver ${rsuuid} rs_port)
         RS_WEIGHT=$(coreval Keepalived Keepalived:RSPool ${uuid} Keepalived:Realserver ${rsuuid} rs_weight)
 
+        echo ${RS_IP} | grep -q : && RS_TYPE="v6" || RS_TYPE="v4"
+
+        [ "${RS_TYPE}" != "${VIP_TYPE}" ] && fatal "mix46"
+
         if [ "${RSP_HC}" = "HTTP_GET" -o "${RSP_HC}" = "SSL_GET" ]; then
             GH_ARGS=""
             [ "${RSP_HC}" = "SSL_GET" ] && GH_ARGS="${GH_ARGS} --use-ssl"
@@ -126,7 +130,7 @@ _create_vip_static() {
 
     VIP_IP=$(coreval    Keepalived Keepalived:RSPool ${RSP_UUID} Keepalived:SLBMaster ${VIP_UUID} vip_ip)
 
-    [ -f /etc/openpanel/networking.def ] || exiterror "Could not determine if ${VIP_IP} is present. Is Networking.module installed?"
+    [ -f /etc/openpanel/networking.def ] || fatal "Could not determine if ${VIP_IP} is present. Is Networking.module installed?"
 
     egrep -q "^addr.*\t${VIP_IP}\t.*" /etc/openpanel/networking.def  || echo ${VIP_IP}
 }
@@ -137,9 +141,9 @@ _create_vip_vrrp() {
 
     VIP_IP=$(coreval    Keepalived Keepalived:RSPool ${RSP_UUID} Keepalived:SLBMaster ${VIP_UUID} vip_ip)
 
-    [ -f /etc/openpanel/networking.def ] || exiterror "Could not determine if ${VIP_IP} is present. Is Networking.module installed?"
+    [ -f /etc/openpanel/networking.def ] || fatal "Could not determine if ${VIP_IP} is present. Is Networking.module installed?"
 
-    egrep -q "^addr.*\t${VIP_IP}\t.*" /etc/openpanel/networking.def  && exiterror "VRRP can not be configured if ${VIP_IP} is actively configured on one of your interfaces"
+    egrep -q "^addr.*\t${VIP_IP}\t.*" /etc/openpanel/networking.def  && fatal "VRRP can not be configured if ${VIP_IP} is actively configured on one of your interfaces"
     egrep -q "^addr.*\t${VIP_IP}\t.*" /etc/openpanel/networking.def  || echo ${VIP_IP}
 }
 
