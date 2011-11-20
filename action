@@ -114,6 +114,8 @@ Module.update() {
     authd installfile keepalived.conf /etc/keepalived/
     authd installfile keepalived_template.conf /etc/keepalived/
 
+    [ "X${nat_gw_ip}" = "X" ] || authd runscript keepalived-enable-gw-nat ${nat_gw_ip} ${external_iface} ${syncd_iface}
+    [ "X${nat_gw_ip}" = "X" ] && authd runscript keepalived-disable-gw-nat
     authd reloadservice keepalived
     exitok
 }

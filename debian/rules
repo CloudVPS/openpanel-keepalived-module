@@ -21,6 +21,13 @@ install:
 	install -m 755 localfunctions.sh ${BUILD_ROOT}/var/openpanel/modules/Keepalived.module/localfunctions.sh
 	mkdir -p ${BUILD_ROOT}/usr/sbin/
 	install -m 755 bin/fetch_master_settings ${BUILD_ROOT}/usr/sbin/fetch_master_settings
+	mkdir -p ${BUILD_ROOT}/var/openpanel/tools/
+	install -m 755 tools/keepalived-disable-gw-nat ${BUILD_ROOT}/var/openpanel/tools/keepalived-disable-gw-nat
+	install -m 755 tools/keepalived-enable-gw-nat ${BUILD_ROOT}/var/openpanel/tools/keepalived-enable-gw-nat
+	mkdir -p ${BUILD_ROOT}/etc/init.d
+	install -m 755 etc/init.d/keepalived-nat-gw ${BUILD_ROOT}/etc/init.d/keepalived-nat-gw
+	mkdir -p ${BUILD_ROOT}/etc/cron.d
+	install -m 755 etc/cron.d/keepalived-slave ${BUILD_ROOT}/etc/cron.d/keepalived-slave
 
 build:
 	mkmodulexml < module.def > module.xml

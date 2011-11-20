@@ -7,6 +7,6 @@ Standards-Version: 3.7.2
 
 Package: openpanel-mod-keepalived
 Architecture: all
-Depends: keepalived
+Depends: keepalived, python-ipaddr
 Description: Configure Keepalived Loadbalancing from OpenPanel
  You can configure VRRP and LVS via Keepalived.

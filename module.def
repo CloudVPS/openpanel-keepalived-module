@@ -260,4 +260,5 @@ authd services
     service keepalived
 
 authd scripts
-    script keepalived-create-slave-user
+    script keepalived-disable-gw-nat
+    script keepalived-enable-gw-nat

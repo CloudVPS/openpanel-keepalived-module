@@ -1,0 +1,1 @@
+*/2 * * * * root    [ -f /etc/openpanel/ha/active_slave ] && /usr/sbin/fetch_master_settings

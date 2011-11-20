@@ -5,6 +5,18 @@ fatal() {
     exit 1
 }
 
+copy() {
+    HOST=$1
+    SRC="${2}"
+    DST="${3}"
+
+    scp -q -o StrictHostKeyChecking=no \
+        -i "${SDIR}/id_rsa" \
+        "openpanel-ha@${MASTER}:${SRC}" "${DST}"
+
+    return $?
+}
+
 SDIR=/etc/openpanel/ha
 
 # Don't run if we aren't an active slave
@@ -22,10 +34,7 @@ NOTIFICATION_EMAIL=$(cat "${SDIR}/notifications")
 [ -z "${SYNCD_IFACE}" -o -z "${EXTERNAL_IFACE}" ] && fatal "External and/or syncd interface is not set"
 [ -f "${SDIR}/id_rsa" ] || fatal "There is no ssh-key I can use to login to the master"
 
-scp -q -o StrictHostKeyChecking=no \
-    -i "${SDIR}/id_rsa" \
-    openpanel-ha@${MASTER}:/etc/keepalived/keepalived_template.conf \
-    /tmp/
+copy ${MASTER} /etc/keepalived/keepalived_template.conf /tmp/keepalived_template.conf
 
 [ $? -eq 0 ] && {
     cat /tmp/keepalived_template.conf | \
@@ -35,6 +44,23 @@ scp -q -o StrictHostKeyChecking=no \
         sed -e "s/@SYNCINTF@/${SYNCD_IFACE}/" | \
         sed -e "s/@PRIO@/${PRIO}/" > /etc/keepalived/keepalived.conf
 
-    /etc/init.d/keepalived reload
+    [ $? -eq 0 ] && /etc/init.d/keepalived reload
 }
 
+copy ${MASTER} ${SDIR}/nat-gw /tmp/nat-gw
+
+if [ $? -eq 0 ]; then
+    cat /tmp/nat-gw | \
+        sed -e "s/E_IFACE=.*/E_IFACE=${EXTERNAL_IFACE}/" | \
+        sed -e "s/I_IFACE=.*/I_IFACE=${SYNCD_IFACE}/" > ${SDIR}/nat-gw
+    /usr/sbin/update-rc.d keepalived-nat-gw defaults
+    /etc/init.d/keepalived-nat-gw restart
+else
+    if [ -r ${SDIR}/nat-gw ]; then
+        /etc/init.d/keepalived-nat-gw stop
+        rm -f ${SDIR}/nat-gw
+        /usr/sbin/update-rc.d -f keepalived-nat-gw remove
+    fi
+fi
+
+exit 0

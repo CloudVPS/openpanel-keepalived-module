@@ -1,0 +1,65 @@
+#!/bin/bash
+# Start/stop Natting the Keepalived network
+
+set -e
+
+. /lib/lsb/init-functions
+
+if [ -r /etc/openpanel/ha/nat-gw ]; then
+    . /etc/openpanel/ha/nat-gw
+else
+    exit 0
+fi
+
+PROG=/sbin/iptables
+DESC="Keepalived NAT settings"
+
+test -f $PROG || exit 0
+
+enable_nat() {
+    [ -f /var/run/keepalived-nat-gw ] && return
+    sysctl -w net.ipv4.ip_forward=1 > /dev/null
+    $PROG -t nat -N keepalived-nat-pr
+    $PROG -t nat -A POSTROUTING -j keepalived-nat-pr
+    $PROG -t nat -A keepalived-nat-pr -s $SNET -o $E_IFACE -j MASQUERADE
+    $PROG -N keepalived-nat-fw
+    $PROG -I FORWARD -j keepalived-nat-fw
+    $PROG -A keepalived-nat-fw -i $E_IFACE -o $I_IFACE -m state --state RELATED,ESTABLISHED -j ACCEPT
+    $PROG -A keepalived-nat-fw -i $I_IFACE -o $E_IFACE -j ACCEPT
+    touch /var/run/keepalived-nat-gw
+}
+
+disable_nat() {
+    [ -f /var/run/keepalived-nat-gw ] || return
+    $PROG -t nat -F keepalived-nat-pr
+    $PROG -t nat -D POSTROUTING -j keepalived-nat-pr
+    $PROG -t nat -X keepalived-nat-pr
+    $PROG -F keepalived-nat-fw
+    $PROG -D FORWARD -j keepalived-nat-fw
+    $PROG -X keepalived-nat-fw
+    rm /var/run/keepalived-nat-gw
+}
+
+case "$1" in
+        start)
+                log_daemon_msg "Starting $DESCR" "$PROG"
+                enable_nat || ret=$?
+                log_end_msg $ret
+                exit $ret
+                ;;
+        stop)
+                log_daemon_msg "Stopping $DESCR" "$PROG"
+                disable_nat || ret=$?
+                log_end_msg $ret
+                ;;
+        restart|reload|force-reload)
+                $0 stop
+                $0 start
+                ;;
+        *)
+                echo "Usage: $0 start|stop|restart|force-reload|reload"
+                exit 1 
+                ;;
+esac
+
+exit 0

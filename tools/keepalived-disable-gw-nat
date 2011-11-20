@@ -1,0 +1,15 @@
+#!/usr/bin/env python
+
+"""This script removes the Ubuntu/Debian startupscript for NAT on the VRRP-NAT-gw"""
+
+import os
+import subprocess
+
+conffile="/etc/openpanel/ha/nat-gw"
+
+if os.path.exists("/etc/init.d/keepalived-nat-gw"):
+    subprocess.call(["/etc/init.d/keepalived-nat-gw", "stop"])
+    subprocess.call(["/usr/sbin/update-rc.d", "-f", "keepalived-nat-gw", "remove"])
+
+if os.path.exists(conffile):
+    os.remove(conffile)

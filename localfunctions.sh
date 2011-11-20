@@ -148,7 +148,7 @@ _create_vip_vrrp() {
 }
 
 function _create_statics() {
-    STATICS="$1"
+    STATICS=$(_uniq "$1")
 
     RET=""
     INTF=$(egrep ^iface /etc/openpanel/networking.def| awk ' { print $3 } ' | egrep -v '\tlo\t' | head -1 | tail -1)
@@ -172,7 +172,7 @@ _EOF_
 }
 
 function _create_vrrp() {
-    STATICS="$1"
+    STATICS=$(_uniq "$1")
 
     RET=""
 
@@ -215,4 +215,10 @@ vrrp_instance loadbalanced_vrrp {
 
 _EOF_
     fi
+}
+
+function _uniq() {
+    STRING="$1"
+
+    echo "${STRING}" | tr ' ' '\n' | sort -u | tr '\n' ' '
 }
