@@ -2,11 +2,11 @@ Source: openpanel-mod-keepalived
 Section: misc
 Priority: optional
 Maintainer: OpenPanel packager <packages@openpanel.com>
-Build-Depends: debhelper (>= 5), openpanel-dev
+Build-Depends: debhelper (>= 5), openpanel-dev, imagemagick
 Standards-Version: 3.7.2
 
 Package: openpanel-mod-keepalived
 Architecture: all
-Depends: keepalived, python-ipaddr
+Depends: keepalived, python-ipaddr, openpanel-core, openpanel-api-sh, openpanel-mod-networking
 Description: Configure Keepalived Loadbalancing from OpenPanel
  You can configure VRRP and LVS via Keepalived.
