@@ -53,8 +53,8 @@ case "$1" in
                 log_end_msg $ret
                 ;;
         restart|reload|force-reload)
-                $0 stop
-                $0 start
+                disable_nat
+                enable_nat
                 ;;
         *)
                 echo "Usage: $0 start|stop|restart|force-reload|reload"

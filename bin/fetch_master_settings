@@ -42,9 +42,14 @@ copy ${MASTER} /etc/keepalived/keepalived_template.conf /tmp/keepalived_template
         sed -e "s/@NOTIFICATIONS@/${NOTIFICATION_EMAIL}/" | \
         sed -e "s/@EXTINTF@/${EXTERNAL_IFACE}/" | \
         sed -e "s/@SYNCINTF@/${SYNCD_IFACE}/" | \
-        sed -e "s/@PRIO@/${PRIO}/" > /etc/keepalived/keepalived.conf
+        sed -e "s/@PRIO@/${PRIO}/" > /etc/keepalived/keepalived.conf.tmp
 
-    [ $? -eq 0 ] && /etc/init.d/keepalived reload
+    [ $? -eq 0 ] && {
+        diff -q /etc/keepalived/keepalived.conf.tmp /etc/keepalived/keepalived.conf || { \
+            mv /etc/keepalived/keepalived.conf.tmp /etc/keepalived/keepalived.conf && \
+                /etc/init.d/keepalived reload
+        }
+    }
 }
 
 copy ${MASTER} ${SDIR}/nat-gw /tmp/nat-gw
@@ -52,9 +57,14 @@ copy ${MASTER} ${SDIR}/nat-gw /tmp/nat-gw
 if [ $? -eq 0 ]; then
     cat /tmp/nat-gw | \
         sed -e "s/E_IFACE=.*/E_IFACE=${EXTERNAL_IFACE}/" | \
-        sed -e "s/I_IFACE=.*/I_IFACE=${SYNCD_IFACE}/" > ${SDIR}/nat-gw
-    /usr/sbin/update-rc.d keepalived-nat-gw defaults
-    /etc/init.d/keepalived-nat-gw restart
+        sed -e "s/I_IFACE=.*/I_IFACE=${SYNCD_IFACE}/" > ${SDIR}/nat-gw.tmp
+
+    [ $? -eq 0 ] && {
+        diff -q ${SDIR}/nat-gw.tmp ${SDIR}/nat-gw || { \
+            /usr/sbin/update-rc.d keepalived-nat-gw defaults
+            /etc/init.d/keepalived-nat-gw restart
+        }
+    }
 else
     if [ -r ${SDIR}/nat-gw ]; then
         /etc/init.d/keepalived-nat-gw stop
