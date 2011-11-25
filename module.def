@@ -203,6 +203,8 @@ class Keepalived:Slave      < uuid d8d2cd1c-3420-4030-8aeb-72fa15d91aad
 
     textarea slave_key      : Master SSH-key
                             < flags visible 
+                            < gridwidth 80
+                            < gridheight 6
 
 # ============================================================================
 # ENUMS
