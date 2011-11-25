@@ -35,7 +35,7 @@ class Keepalived            < uuid b7bdba75-f440-4d84-a5d5-ef7bfa4b78c0
                             < icon keepalived.png
                             < capabilities update admin
                             < explanation keepalived.html
-                            < listview id master_slave notifications router_id
+                            < listview master_slave router_id notifications external_iface syncd_iface
                             < required id master_slave router_id notifications external_iface syncd_iface
 
     enum master_slave       : Master or Slave
@@ -44,7 +44,6 @@ class Keepalived            < uuid b7bdba75-f440-4d84-a5d5-ef7bfa4b78c0
     string notifications    : Send HA notifications to
                             < example you@example.com
                             < regexp [:email:]
-                            < tooltip Leave empty to disable notifications
 
     string router_id        : Router ID
                             < tooltip This name will be used in notifications so you know which machine sent it
