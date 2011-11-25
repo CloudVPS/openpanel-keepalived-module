@@ -111,6 +111,7 @@ class Keepalived:RSPool     < uuid a48532dc-4799-4a9e-a504-964db9659690
 
     string rsp_hc_url       : File to check with HTTP/SSL-check
                             < regexp [:_urlvalid:]
+                            < default /
 
     string rsp_hc_retcode   : HTTP-Response to expect
                             < default 200
@@ -172,6 +173,7 @@ class Keepalived:SLBMaster  < uuid efde574b-c31e-4ed8-8062-58c590f5c7a8
 
     string vip_vhost        : Vhost used for healthchecking
                             < regexp [:hostname:]
+                            < default localhost
                             
     enum vip_alg            : Loadbalancing algorithm
                             < default wrr
@@ -204,7 +206,6 @@ class Keepalived:Slave      < uuid d8d2cd1c-3420-4030-8aeb-72fa15d91aad
     textarea slave_key      : Master SSH-key
                             < flags visible 
                             < gridwidth 80
-                            < gridheight 6
 
 # ============================================================================
 # ENUMS
