@@ -17,7 +17,7 @@ DESC="Keepalived NAT settings"
 test -f $PROG || exit 0
 
 enable_nat() {
-    [ -f /var/run/keepalived-nat-gw ] && return
+    [ -f /var/run/keepalived-nat-gw ] && return 1
     sysctl -w net.ipv4.ip_forward=1 > /dev/null
     $PROG -t nat -N keepalived-nat-pr
     $PROG -t nat -A POSTROUTING -j keepalived-nat-pr
@@ -30,7 +30,7 @@ enable_nat() {
 }
 
 disable_nat() {
-    [ -f /var/run/keepalived-nat-gw ] || return
+    [ -f /var/run/keepalived-nat-gw ] || return 1
     $PROG -t nat -F keepalived-nat-pr
     $PROG -t nat -D POSTROUTING -j keepalived-nat-pr
     $PROG -t nat -X keepalived-nat-pr
@@ -53,8 +53,8 @@ case "$1" in
                 log_end_msg $ret
                 ;;
         restart|reload|force-reload)
-                disable_nat
-                enable_nat
+                $0 stop
+                $0 start
                 ;;
         *)
                 echo "Usage: $0 start|stop|restart|force-reload|reload"

@@ -20,12 +20,21 @@ else:
 
 ipaddr = IPNetwork(gw+"/24")
 
-f = open('/etc/openpanel/ha/nat-gw', 'w')
+conffile="/etc/openpanel/ha/nat-gw"
+fileexisted = "false"
+
+if os.path.exists(conffile):
+    fileexisted = "true"
+
+f = open(conffile, 'w')
 f.write("SNET=\"%s/%s\"\n" % ( str(ipaddr.network), str(ipaddr.prefixlen) ))
 f.write("E_IFACE=\"%s\"\n" % ( str(ext_iface) ))
 f.write("I_IFACE=\"%s\"\n" % ( str(int_iface) ))
 f.close();
 
-subprocess.call(["/usr/sbin/update-rc.d", "keepalived-nat-gw", "defaults"])
-subprocess.call(["/etc/init.d/keepalived-nat-gw", "start"])
+if fileexisted != "true":
+    subprocess.call(["/usr/sbin/update-rc.d", "keepalived-nat-gw", "defaults"])
+    subprocess.call(["/etc/init.d/keepalived-nat-gw", "start"])
+else:
+    subprocess.call(["/etc/init.d/keepalived-nat-gw", "start"])
 
