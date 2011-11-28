@@ -36,6 +36,7 @@ _create_pool() {
         echo ${RS_IP} | grep -q : && RS_TYPE="v6" || RS_TYPE="v4"
 
         [ "${RS_TYPE}" != "${VIP_TYPE}" ] && fatal "mix46"
+        [ "X${RS_WEIGHT}" = "X" ] && RS_WEIGHT=1
 
         if [ "${RSP_HC}" = "HTTP_GET" -o "${RSP_HC}" = "SSL_GET" ]; then
             GH_ARGS=""
