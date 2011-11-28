@@ -113,7 +113,7 @@ class Keepalived:RSPool     < uuid a48532dc-4799-4a9e-a504-964db9659690
                             < regexp [:_urlvalid:]
                             < default /
 
-    string rsp_hc_retcode   : HTTP-Response to expect
+    string rsp_hc_retcode   : HTTP Response to expect
                             < default 200
                             < regexp [:numbers:]
 
