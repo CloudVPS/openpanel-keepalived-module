@@ -8,6 +8,7 @@ Module.getconfig() {
   <openpanel.module>
     <dict id="Keepalived" type="class">
       <dict id="keepalived" type="object">
+        <string id="uuid">6b7e4f9e-033a-452a-975c-c6e1a6f16699</string>
         <enum id="master_slave">master</enum>
         <string id="router_id">${ROUTERID}</string
       </dict>
