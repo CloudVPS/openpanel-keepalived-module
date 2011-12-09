@@ -156,14 +156,11 @@ function _create_statics() {
     STATICS=$(_uniq "$1")
 
     RET=""
-    INTF=$(egrep ^iface /etc/openpanel/networking.def| awk ' { print $3 } ' | egrep -v '\tlo\t' | head -1 | tail -1)
-
-    [ "X${INTF}" = "X" ] && fatal "noint"
 
     for s in ${STATICS}; do
         SUFFIX="/32"
         echo $s | grep -q : && SUFFIX="/128"
-        RET="${RET}\t${s}${SUFFIX} dev ${INTF}\n"
+        RET="${RET}\t${s}${SUFFIX} dev @EXTINTF@\n"
     done
     
     if [ "X${RET}" != "X" ]; then
