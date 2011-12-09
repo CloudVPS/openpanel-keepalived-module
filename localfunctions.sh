@@ -29,6 +29,10 @@ _create_pool() {
     fi
 
     for rsuuid in `coreval --loop Keepalived Keepalived:RSPool ${uuid} Keepalived:Realserver`; do
+        RS_ENABLED=$(coreval Keepalived Keepalived:RSPool ${uuid} Keepalived:Realserver ${rsuuid} rs_enabled)
+
+        [ "${RS_ENABLED}" = "false" ] && continue;
+
         RS_IP=$(coreval Keepalived Keepalived:RSPool ${uuid} Keepalived:Realserver ${rsuuid} rs_ip)
         RS_PORT=$(coreval Keepalived Keepalived:RSPool ${uuid} Keepalived:Realserver ${rsuuid} rs_port)
         RS_WEIGHT=$(coreval Keepalived Keepalived:RSPool ${uuid} Keepalived:Realserver ${rsuuid} rs_weight)

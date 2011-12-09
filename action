@@ -84,6 +84,9 @@ Module.update() {
 
     for uuid in `coreval --loop Keepalived Keepalived:RSPool`; do
         for slbuuid in `coreval --loop Keepalived Keepalived:RSPool ${uuid} Keepalived:SLBMaster`; do
+            VIP_ENABLED=$(coreval Keepalived Keepalived:RSPool ${uuid} Keepalived:SLBMaster ${slbuuid} vip_enabled)
+            [ "${VIP_ENABLED}" = "false" ] && continue;
+
             VIP_IP=$(_create_vip_static ${uuid} ${slbuuid}) || exiterror "${VIP_IP}"
             [ -s authorized_keys ] || STATICS="${STATICS} ${VIP_IP}"
             [ -s authorized_keys ] && VRRPS="${VRRPS} ${VIP_IP}"

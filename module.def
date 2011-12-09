@@ -24,7 +24,7 @@ module Keepalived           < uuid 6b8bda6c-5212-4f88-ae64-a5fa7487cba8
 # ============================================================================
 class Keepalived            < uuid b7bdba75-f440-4d84-a5d5-ef7bfa4b78c0
                             < version 1
-                            < indexing auto
+                            < indexing manual
                             < allchildren true
                             < uniquein class
                             < shortname keepalived
@@ -145,6 +145,9 @@ class Keepalived:Realserver < uuid bd6ca88e-5aa2-4bc6-8ec2-416ffda76c5a
                             < regexp [:numbers:]
                             < default 100
 
+    bool rs_enabled         : Enabled
+                            < default false
+
     string rs_description   : Description
                             < tooltip An illustrative description for this back-end server
 
@@ -170,6 +173,9 @@ class Keepalived:SLBMaster  < uuid efde574b-c31e-4ed8-8062-58c590f5c7a8
     string vip_port         : Front-end port
                             < regexp [:numbers:]
                             < example 80
+
+    bool vip_enabled        : Enabled
+                            < default false
 
     string vip_vhost        : Vhost used for healthchecking
                             < regexp [:hostname:]
