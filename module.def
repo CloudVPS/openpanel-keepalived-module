@@ -34,7 +34,7 @@ class Keepalived            < uuid b7bdba75-f440-4d84-a5d5-ef7bfa4b78c0
                             < sortindex 85
                             < icon keepalived.png
                             < capabilities update admin
-                            < explanation keepalived.html
+                            < explanation html/keepalived.html
                             < listview master_slave router_id notifications external_iface syncd_iface
                             < required id master_slave router_id notifications external_iface syncd_iface
 
@@ -94,6 +94,7 @@ class Keepalived:RSPool     < uuid a48532dc-4799-4a9e-a504-964db9659690
                             < shortname rspool
                             < sortindex 90
                             < title Loadbalancing
+                            < preface html/rspool-preface.html
                             < description Create loadbalanced services
                             < capabilities update create delete admin
                             < listview id rsp_description rsp_healthcheck rsp_hc_tcp_port rsp_hc_url rsp_hc_retcode
@@ -127,6 +128,7 @@ class Keepalived:Realserver < uuid bd6ca88e-5aa2-4bc6-8ec2-416ffda76c5a
                             < shortname realservers
                             < sortindex 90
                             < title Back-end servers
+                            < preface html/realserver-preface.html
                             < description Create back-end servers used by a loadbalanced service
                             < capabilities update create delete admin
                             < listview id rs_ip rs_port rs_description rs_weight
@@ -162,6 +164,7 @@ class Keepalived:SLBMaster  < uuid efde574b-c31e-4ed8-8062-58c590f5c7a8
                             < sortindex 90
                             < title Front-end services
                             < description Create front-end services
+                            < preface html/vip-preface.html
                             < capabilities update create delete admin
                             < listview id vip_ip vip_port vip_alg vip_description vip_vhost
                             < required id vip_ip vip_port vip_alg
