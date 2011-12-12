@@ -8,4 +8,10 @@
 # restrictions. For more information, please visit the Legal Information 
 # section of the OpenPanel website on http://www.openpanel.com/
 
-exit 0
+/sbin/modprobe ip_vs
+
+if [ -f /proc/net/ip_vs ]; then
+    exit 0
+else
+    exit 1
+fi
