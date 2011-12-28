@@ -131,7 +131,7 @@ class Keepalived:Realserver < uuid bd6ca88e-5aa2-4bc6-8ec2-416ffda76c5a
                             < preface html/realserver-preface.html
                             < description Create back-end servers used by a loadbalanced service
                             < capabilities update create delete admin
-                            < listview id rs_ip rs_port rs_description rs_weight
+                            < listview id rs_ip rs_port rs_description rs_weight rs_enabled
                             < required id rs_ip rs_port rs_description
 
 
@@ -166,7 +166,7 @@ class Keepalived:SLBMaster  < uuid efde574b-c31e-4ed8-8062-58c590f5c7a8
                             < description Create front-end services
                             < preface html/vip-preface.html
                             < capabilities update create delete admin
-                            < listview id vip_ip vip_port vip_alg vip_description vip_vhost
+                            < listview id vip_ip vip_port vip_alg vip_description vip_vhost vip_enabled
                             < required id vip_ip vip_port vip_alg
 
     string vip_ip           : Front-end IP Address
