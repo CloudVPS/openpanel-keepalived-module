@@ -4,12 +4,16 @@ from OpenPanel.coreclient import CoreSession
 from subprocess import Popen, PIPE
 from re import match
 from os import path
+from sys import exit
 
-def get_ipvsadm():
-    output=Popen(["/sbin/ipvsadm", "-l", "-n"], stdout=PIPE).communicate()[0].split("\n")
+def get_ipvsadm(raw=False):
+    output=Popen(["/sbin/ipvsadm", "-l", "-n"], stdout=PIPE).communicate()[0]
+
+    if raw == True:
+        return output
 
     rettree = {}
-    for line in output:
+    for line in output.split("\n"):
         matches = match("^\s+->\s+([0-9a-f:.]+):([0-9]+)", line)
         if matches != None:
             keyname = str(matches.group(1)+":"+matches.group(2))
@@ -38,6 +42,10 @@ def fetch_slave_status(slip):
 
 c = CoreSession()
 c.login()
+
+if c.rpc.getrecords(classid='Keepalived')['body']['data']['Keepalived']['keepalived']['master_slave'] == "slave":
+    print get_ipvsadm(True)
+    exit(0)
 
 pools    = c.rpc.getrecords(classid='Keepalived:RSPool')['body']['data']['Keepalived:RSPool']
 rservers = c.rpc.getrecords(classid='Keepalived:Realserver')['body']['data']['Keepalived:Realserver']
