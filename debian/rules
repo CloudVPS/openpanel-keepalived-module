@@ -26,10 +26,12 @@ install:
 	mkdir -p ${BUILD_ROOT}/var/openpanel/tools/
 	install -m 755 tools/keepalived-disable-gw-nat ${BUILD_ROOT}/var/openpanel/tools/keepalived-disable-gw-nat
 	install -m 755 tools/keepalived-enable-gw-nat ${BUILD_ROOT}/var/openpanel/tools/keepalived-enable-gw-nat
+	install -m 755 tools/openpanel-keepalived-status ${BUILD_ROOT}/var/openpanel/tools/openpanel-keepalived-status
 	mkdir -p ${BUILD_ROOT}/etc/init.d
 	install -m 755 etc/init.d/keepalived-nat-gw ${BUILD_ROOT}/etc/init.d/keepalived-nat-gw
 	mkdir -p ${BUILD_ROOT}/etc/cron.d
 	install -m 755 etc/cron.d/keepalived-slave ${BUILD_ROOT}/etc/cron.d/keepalived-slave
+	install -m 755 etc/cron.d/keepalived-master ${BUILD_ROOT}/etc/cron.d/keepalived-master
 
 build:
 	mkmodulexml < module.def > module.xml

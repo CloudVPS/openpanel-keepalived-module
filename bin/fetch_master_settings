@@ -5,19 +5,47 @@ fatal() {
     exit 1
 }
 
-copy() {
+get() {
     HOST=$1
     SRC="${2}"
     DST="${3}"
 
     scp -q -o StrictHostKeyChecking=no \
+        -o PasswordAuthentication=no \
         -i "${SDIR}/id_rsa" \
         "openpanel-ha@${MASTER}:${SRC}" "${DST}"
 
     return $?
 }
 
+put() {
+    HOST=$1
+    SRC="${2}"
+    DST="${3}"
+
+    scp -q -o StrictHostKeyChecking=no \
+        -o PasswordAuthentication=no \
+        -i "${SDIR}/id_rsa" \
+        "${SRC}" "openpanel-ha@${MASTER}:${DST}"
+
+    return $?
+}
+
+reload_keepalived() {
+    if [ -f /var/run/keepalived.pid ]; then
+        KPID=$(cat /var/run/keepalived.pid)
+        if [ -d /proc/${KPID} ]; then
+            /etc/init.d/keepalived restart
+        else
+            /etc/init.d/keepalived start
+        fi
+    else
+        /etc/init.d/keepalived start
+    fi
+}
+
 SDIR=/etc/openpanel/ha
+KEEPALIVED="true"
 
 # Don't run if we aren't an active slave
 [ -f "${SDIR}/active_slave" ] || exit 0
@@ -34,9 +62,9 @@ NOTIFICATION_EMAIL=$(cat "${SDIR}/notifications")
 [ -z "${SYNCD_IFACE}" -o -z "${EXTERNAL_IFACE}" ] && fatal "External and/or syncd interface is not set"
 [ -f "${SDIR}/id_rsa" ] || fatal "There is no ssh-key I can use to login to the master"
 
-copy ${MASTER} /etc/keepalived/keepalived_template.conf /tmp/keepalived_template.conf
+get ${MASTER} /etc/keepalived/keepalived_template.conf /tmp/keepalived_template.conf
 
-[ $? -eq 0 ] && {
+if [ $? -eq 0 ]; then
     cat /tmp/keepalived_template.conf | \
         sed -e "s/@ROUTERID@/${ROUTERID}/" | \
         sed -e "s/@NOTIFICATIONS@/${NOTIFICATION_EMAIL}/" | \
@@ -45,14 +73,25 @@ copy ${MASTER} /etc/keepalived/keepalived_template.conf /tmp/keepalived_template
         sed -e "s/@PRIO@/${PRIO}/" > /etc/keepalived/keepalived.conf.tmp
 
     [ $? -eq 0 ] && {
+    if [ -f /etc/keepalived/keepalived.conf ]; then
         diff -q /etc/keepalived/keepalived.conf.tmp /etc/keepalived/keepalived.conf || { \
             mv /etc/keepalived/keepalived.conf.tmp /etc/keepalived/keepalived.conf && \
-                /etc/init.d/keepalived reload
+            reload_keepalived
         }
+    else
+        mv /etc/keepalived/keepalived.conf.tmp /etc/keepalived/keepalived.conf && \
+            reload_keepalived
+    fi
     }
-}
+else
+    if [ -f /etc/keepalived/keepalived.conf ]; then
+        /etc/init.d/keepalived stop
+        rm /etc/keepalived/keepalived.conf
+    fi
+    KEEPALIVED="false"
+fi
 
-copy ${MASTER} ${SDIR}/nat-gw /tmp/nat-gw
+get ${MASTER} ${SDIR}/nat-gw /tmp/nat-gw
 
 if [ $? -eq 0 ]; then
     cat /tmp/nat-gw | \
@@ -60,17 +99,43 @@ if [ $? -eq 0 ]; then
         sed -e "s/I_IFACE=.*/I_IFACE=${SYNCD_IFACE}/" > ${SDIR}/nat-gw.tmp
 
     [ $? -eq 0 ] && {
-        diff -q ${SDIR}/nat-gw.tmp ${SDIR}/nat-gw || { \
-            /usr/sbin/update-rc.d keepalived-nat-gw defaults
-            /etc/init.d/keepalived-nat-gw restart
-        }
+    if [ -f ${SDIR}/nat-gw ]; then
+        diff -q ${SDIR}/nat-gw.tmp ${SDIR}/nat-gw || \
+                /etc/init.d/keepalived-nat-gw restart
+    else
+        mv ${SDIR}/nat-gw.tmp ${SDIR}/nat-gw
+        /usr/sbin/update-rc.d keepalived-nat-gw defaults
+        /etc/init.d/keepalived-nat-gw start
+    fi
     }
 else
-    if [ -r ${SDIR}/nat-gw ]; then
+    if [ -f ${SDIR}/nat-gw ]; then
         /etc/init.d/keepalived-nat-gw stop
         rm -f ${SDIR}/nat-gw
         /usr/sbin/update-rc.d -f keepalived-nat-gw remove
     fi
+fi
+
+if [ "${KEEPALIVED}" = "true" ]; then
+	NOW=$(date)
+	ME=$(hostname -f)
+	echo "<p>Information on ${ME}: <br />" > /tmp/slavestatus
+	echo "Last update: ${NOW}< br/>" >> /tmp/slavestatus
+	
+	if [ -f /var/run/keepalived.pid ]; then 
+	    KPID=$(cat /var/run/keepalived.pid)
+	    if [ -d /proc/${KPID} ]; then
+	        echo "Keepalived running. Pid: ${KPID}<br />" >> /tmp/slavestatus
+	    else
+	        echo "Pidfile for Keepalived found, but it's not running<br />" >> /tmp/slavestatus
+	    fi
+	else
+	    echo "<strong>No pidfile found for Keepalived</strong><br />" >> /tmp/slavestatus
+	fi
+    echo "</p>" >> /tmp/slavestatus
+    
+    MYIP=$(ip ro get ${MASTER} | grep src | awk ' { print $NF } ')
+    put ${MASTER} /tmp/slavestatus /etc/openpanel/ha/slavestatus/${MYIP}
 fi
 
 exit 0

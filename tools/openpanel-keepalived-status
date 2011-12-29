@@ -1,0 +1,96 @@
+#!/usr/bin/python
+
+from OpenPanel.coreclient import CoreSession
+from subprocess import Popen, PIPE
+from re import match
+from os import path
+
+def get_ipvsadm():
+    output=Popen(["/sbin/ipvsadm", "-l", "-n"], stdout=PIPE).communicate()[0].split("\n")
+
+    rettree = {}
+    for line in output:
+        matches = match("^\s+->\s+([0-9a-f:.]+):([0-9]+)", line)
+        if matches != None:
+            keyname = str(matches.group(1)+":"+matches.group(2))
+            rettree[keyname] = "true"
+
+    return rettree
+
+def check_keepalived():
+    pid = str()
+
+    if path.exists("/var/run/keepalived.pid"):
+        fd = open("/var/run/keepalived.pid")
+        pid = fd.read()
+
+    if pid == "" or path.exists("/proc/"+pid) == None:
+        return "<strong>Keepalived is not running!</strong>"
+
+    return "Keepalived is running. Pid: %s" % (pid)
+
+def fetch_slave_status(slip):
+    if path.exists("/etc/openpanel/ha/slavestatus/"+slip):
+        fd = open("/etc/openpanel/ha/slavestatus/"+slip)
+        return fd.read()
+    else:
+        return "<strong>No status found for %s!</strong>" % (slip)
+
+c = CoreSession()
+c.login()
+
+pools    = c.rpc.getrecords(classid='Keepalived:RSPool')['body']['data']['Keepalived:RSPool']
+rservers = c.rpc.getrecords(classid='Keepalived:Realserver')['body']['data']['Keepalived:Realserver']
+vips     = c.rpc.getrecords(classid='Keepalived:SLBMaster')['body']['data']['Keepalived:SLBMaster']
+slaves   = c.rpc.getrecords(classid='Keepalived:Slaves')['body']['data']
+
+tree = dict()
+acttree = get_ipvsadm()
+keepalived_check = check_keepalived()
+
+for p in pools:
+    tree[pools[p]['uuid']] = dict()
+    tree[pools[p]['uuid']]['description'] = pools[p]['rsp_description']
+    tree[pools[p]['uuid']]['vips'] = list()
+    tree[pools[p]['uuid']]['realservers'] = list()
+
+for v in vips:
+    tree[vips[v]['parentid']]['vips'].append(vips[v])
+
+for r in rservers:
+    tree[rservers[r]['parentid']]['realservers'].append(rservers[r])
+
+for i in tree:
+    print "<h1>Information for pool: %s</h1>" % (tree[i]['description'])
+
+    print "<p>Available VIPS in this pool:</p>"
+    print "<ul>"
+    for v in tree[i]['vips']:
+        print "<li>%s:%s</li>" % (v['vip_ip'], v['vip_port'])
+        print "</ul>"
+
+    print "<p>Available realservers in this pool:</p>"
+    print "<ul>"
+    for r in tree[i]['realservers']:
+        keyname = str(r['rs_ip']+":"+r['rs_port'])
+        if r['rs_enabled'] == False:
+            print '<li>%s:%s <img src="disabled.png" title="disabled" alt="disabled"/></li>' % (r['rs_ip'], r['rs_port'])
+        elif keyname in acttree:
+            print '<li>%s:%s <img src="up.png" title="up" alt="up"/></li>' % (r['rs_ip'], r['rs_port'])
+        else:
+            print '<li>%s:%s <img src="down.png" title="down" alt="down"/></li>' % (r['rs_ip'], r['rs_port'])
+    print "</ul>"
+
+print "<p>Master Keepalived status:<br />%s</p>" % (keepalived_check)
+
+print "<h1>Slave status</h1>"
+
+if slaves['info']['total'] > 0:
+    print "<ul>"
+    for s in slaves['Keepalived:Slaves']:
+        slip = slaves['Keepalived:Slaves'][s]['slave_ip']
+        print "<li><strong>%s</strong><br />%s</li>" % (slip, fetch_slave_status(slip))
+    print "</ul>"
+else:
+    print "<p>No slaves configured</p>"
+

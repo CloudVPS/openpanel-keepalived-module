@@ -216,6 +216,19 @@ class Keepalived:Slave      < uuid d8d2cd1c-3420-4030-8aeb-72fa15d91aad
                             < flags visible 
                             < gridwidth 80
 
+# ----------------------------------------------------------------------------
+class Keepalived:Status     < uuid 2be94db6-6235-4771-991c-ba9f5946cb72
+                            < version 1
+                            < requires Keepalived
+                            < indexing auto
+                            < uniquein parent
+                            < shortname kstatus
+                            < emptytext <![CDATA[<iframe src="html/keepalived-status.html"></iframe>]]>
+                            < sortindex 1000
+                            < title Status
+                            < description Loadbalancing Status
+                            < capabilities admin
+
 # ============================================================================
 # ENUMS
 # ============================================================================
