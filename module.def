@@ -82,8 +82,10 @@ class Keepalived:Slaves     < uuid bc51994d-8987-4e44-add4-37afdd101fd0
 
     string slave_ip         : Slave IP Address
                             < regexp [:ip:] 
+                            < gridwidth 45
 
     textarea slave_key      : Slave SSH-pubkey
+                            < gridhide true
 
     string slave_description    : Description
                                 < tooltip An illustrative description of this pool
@@ -110,30 +112,37 @@ class Keepalived:RSPool     < uuid a48532dc-4799-4a9e-a504-964db9659690
     enum rsp_healthcheck    : Healthcheck
                             < default HTTP_GET
                             < tooltip Which healthcheck to run on the realservers
+                            < gridwidth 25
 
     string rsp_hc_tcp_port  : Healthcheck TCP port
                             < tooltip Is only used for the TCP-check
                             < regexp ^(0|([1-9]\d{0,3}|[1-5]\d{4}|[6][0-5][0-5]([0-2]\d|[3][0-5])))$
+                            < gridhide true
 
     string rsp_hc_url       : File to check with HTTP/SSL-check
                             < regexp [:_urlvalid:]
                             < default /
+                            < gridhide true
 
     string rsp_hc_retcode   : HTTP Response to expect
                             < default 200
                             < regexp [:numbers:]
+                            < gridhide true
 
     string rsp_hc_timeout   : Check timeout (seconds)
                             < default 5
                             < regexp [:numbers:]
+                            < gridhide true
 
     string rsp_hc_retry     : Retry checks
                             < default 3
                             < regexp [:numbers:]
+                            < gridhide true
 
     string rsp_hc_rt_delay  : Retry delay (seconds)
                             < default 20
                             < regexp [:numbers:]
+                            < gridhide true
 
 # ----------------------------------------------------------------------------
 class Keepalived:Realserver < uuid bd6ca88e-5aa2-4bc6-8ec2-416ffda76c5a
@@ -155,17 +164,21 @@ class Keepalived:Realserver < uuid bd6ca88e-5aa2-4bc6-8ec2-416ffda76c5a
     string rs_ip            : Back-end IP Address
                             < regexp [:ip:]
                             < example ::1
+                            < gridwidth 45
 
     string rs_port          : Back-end port
                             < regexp [:numbers:]
                             < example 80
+                            < gridwidth 25
 
     string rs_weight        : Weight
                             < regexp [:numbers:]
                             < default 100
+                            < gridhide true
 
     bool rs_enabled         : Enabled
                             < default false
+                            < gridwidth 10
 
     string rs_description   : Description
                             < tooltip An illustrative description for this back-end server
@@ -189,23 +202,29 @@ class Keepalived:SLBMaster  < uuid efde574b-c31e-4ed8-8062-58c590f5c7a8
     string vip_ip           : Front-end IP Address
                             < regexp [:ip:]
                             < example ::1
+                            < gridwidth 45
 
     string vip_port         : Front-end port
                             < regexp [:numbers:]
                             < example 80
+                            < gridwidth 25
 
     enum vip_proto          : Protocol
                             < default TCP
+                            < gridwidth 25
 
     bool vip_enabled        : Enabled
                             < default false
+                            < gridwidth 10
 
     string vip_vhost        : Vhost used for healthchecking
                             < regexp [:hostname:]
                             < default localhost
+                            < gridhide true
                             
     enum vip_alg            : Loadbalancing algorithm
                             < default wrr
+                            < gridhide true
 
     string vip_description  : Description
                             < tooltip An illustrative description for this front-end service
@@ -213,15 +232,19 @@ class Keepalived:SLBMaster  < uuid efde574b-c31e-4ed8-8062-58c590f5c7a8
     string vip_pt           : Persistance timeout (seconds)
                             < regexp [:numbers:]
                             < default 300
+                            < gridhide true
 
     string vip_pg           : Persistance granularity
                             < regexp [:numbers:]
+                            < gridhide true
 
     string vip_sorry_ip     : Sorry server (IP)
                             < regexp [:ip:]
+                            < gridhide true
 
     string vip_sorry_port   : Sorry server (Port)
                             < regexp ^(0|([1-9]\d{0,3}|[1-5]\d{4}|[6][0-5][0-5]([0-2]\d|[3][0-5])))$
+                            < gridhide true
 
 # ----------------------------------------------------------------------------
 class Keepalived:Slave      < uuid d8d2cd1c-3420-4030-8aeb-72fa15d91aad
@@ -241,13 +264,15 @@ class Keepalived:Slave      < uuid d8d2cd1c-3420-4030-8aeb-72fa15d91aad
 
     string slave_prio       : Slave priority
                             < regexp [:numbers:]
+                            < gridwidth 25
 
     string slave_master_ip  : Master IP Address
                             < regexp [:ip:] 
+                            < gridwidth 45
 
     textarea slave_key      : Master SSH-key
                             < flags visible 
-                            < gridwidth 80
+                            < gridhide true
 
 # ----------------------------------------------------------------------------
 class Keepalived:Status     < uuid 2be94db6-6235-4771-991c-ba9f5946cb72
@@ -256,11 +281,15 @@ class Keepalived:Status     < uuid 2be94db6-6235-4771-991c-ba9f5946cb72
                             < indexing auto
                             < uniquein parent
                             < shortname kstatus
-                            < emptytext <![CDATA[<iframe src="html/keepalived-status.html"></iframe>]]>
+                            < dynamic true
                             < sortindex 1000
                             < title Status
                             < description Loadbalancing Status
+                            < hidegrid true
                             < capabilities admin
+                            < explanation html/status-js.html
+
+    string status           : Status
 
 # ============================================================================
 # ENUMS

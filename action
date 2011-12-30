@@ -183,4 +183,27 @@ Keepalived:Slave.update() {
     exitok
 }
 
+Keepalived:Status.listobjects() {
+
+    link="<iframe src=\"javascript:_construct_src('html/keepalived-status.html')\"></iframe>"
+    link=$(echo ${link} | sed -e 's/</\&lt;/g' | sed -e 's/>/\&gt;/g')
+  cat << _EOF_
+<?xml version="1.0" encoding="UTF-8"?>
+<dict>
+  <dict id="objects">
+    <dict id="Keepalived:Status" type="class">
+      <dict id="There are no backups yet" type="object">
+        <string id="status">${link}</string>
+      </dict>
+    </dict>
+  </dict>
+  <dict id="OpenCORE:Result">
+    <integer id="error">0</integer>
+    <string id="message">OK</string>
+  </dict>
+</dict>
+_EOF_
+  exitquiet
+}
+
 implement Keepalived.module
