@@ -97,7 +97,7 @@ class Keepalived:RSPool     < uuid a48532dc-4799-4a9e-a504-964db9659690
                             < preface html/rspool-preface.html
                             < description Create loadbalanced services
                             < capabilities update create delete admin
-                            < listview id rsp_description rsp_healthcheck rsp_hc_tcp_port rsp_hc_url rsp_hc_retcode
+                            < listview rsp_description rsp_healthcheck
                             < required id rsp_description rsp_healthcheck
 
     string rsp_description  : Description
@@ -131,7 +131,7 @@ class Keepalived:Realserver < uuid bd6ca88e-5aa2-4bc6-8ec2-416ffda76c5a
                             < preface html/realserver-preface.html
                             < description Create back-end servers used by a loadbalanced service
                             < capabilities update create delete admin
-                            < listview id rs_ip rs_port rs_description rs_weight rs_enabled
+                            < listview rs_enabled rs_description rs_ip rs_port
                             < required id rs_ip rs_port rs_description
 
 
@@ -166,8 +166,8 @@ class Keepalived:SLBMaster  < uuid efde574b-c31e-4ed8-8062-58c590f5c7a8
                             < description Create front-end services
                             < preface html/vip-preface.html
                             < capabilities update create delete admin
-                            < listview id vip_ip vip_port vip_alg vip_description vip_vhost vip_enabled
-                            < required id vip_ip vip_port vip_alg
+                            < listview vip_enabled vip_ip vip_port vip_proto vip_description
+                            < required id vip_ip vip_port vip_alg vip_proto
 
     string vip_ip           : Front-end IP Address
                             < regexp [:ip:]
@@ -176,6 +176,9 @@ class Keepalived:SLBMaster  < uuid efde574b-c31e-4ed8-8062-58c590f5c7a8
     string vip_port         : Front-end port
                             < regexp [:numbers:]
                             < example 80
+
+    enum vip_proto          : Protocol
+                            < default TCP
 
     bool vip_enabled        : Enabled
                             < default false
@@ -189,6 +192,19 @@ class Keepalived:SLBMaster  < uuid efde574b-c31e-4ed8-8062-58c590f5c7a8
 
     string vip_description  : Description
                             < tooltip An illustrative description for this front-end service
+
+    string vip_pt           : Persistance timeout (seconds)
+                            < regexp [:numbers:]
+                            < default 300
+
+    string vip_pg           : Persistance granularity
+                            < regexp [:numbers:]
+
+    string vip_sorry_ip     : Sorry server (IP)
+                            < regexp [:ip:]
+
+    string vip_sorry_port   : Sorry server (Port)
+                            < regexp ^(0|([1-9]\d{0,3}|[1-5]\d{4}|[6][0-5][0-5]([0-2]\d|[3][0-5])))$
 
 # ----------------------------------------------------------------------------
 class Keepalived:Slave      < uuid d8d2cd1c-3420-4030-8aeb-72fa15d91aad
@@ -251,6 +267,9 @@ enum rsp_healthcheck
     TCP_CHECK               : TCP on port ..
     SMTP_CHECK              : SMTP
 
+enum vip_proto
+    TCP                     : TCP
+    UDP                     : UDP
 # ============================================================================
 # AUTHD
 # ============================================================================

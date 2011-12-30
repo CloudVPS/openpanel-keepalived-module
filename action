@@ -90,7 +90,11 @@ Module.update() {
             VIP_IP=$(_create_vip_static ${uuid} ${slbuuid}) || exiterror "${VIP_IP}"
             echo ${VIP_IP} | grep -q : && VIP_TYPE="v6" || VIP_TYPE="v4"
 
-            VIP=$(_create_vip ${uuid} ${slbuuid})
+            VIP=$(_create_vip ${uuid} ${slbuuid} ${VIP_TYPE})
+            echo "${VIP}" | grep -q "ssport" && exiterror "If you enter a sorry server, you must also enter the port"
+            echo "${VIP}" | grep -q "pg_v4" && exiterror "Granularity should be between 1 and 32"
+            echo "${VIP}" | grep -q "pg_v6" && exiterror "Granularity should be between 1 and 128"
+
             VHOST=$(_get_vip_vhost ${uuid} ${slbuuid})
             POOL=$(_create_pool ${uuid} ${VHOST} ${VIP_TYPE})
             echo "${POOL}" | grep -q "mix46" && exiterror "You cannot mix IPv4 and IPv6 Front- and Back-end IPs"

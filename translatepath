@@ -1,0 +1,6 @@
+#!/bin/sh
+
+username=$1
+file=$2
+
+echo /var/openpanel/modules/Keepalived.module/html/$file

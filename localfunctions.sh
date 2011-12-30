@@ -102,22 +102,48 @@ _EOF_
 _create_vip() {
     RSP_UUID=$1
     VIP_UUID=$2
+    VIP_TYPE=$3
 
     VIP_IP=$(coreval    Keepalived Keepalived:RSPool ${RSP_UUID} Keepalived:SLBMaster ${VIP_UUID} vip_ip)
     VIP_PORT=$(coreval  Keepalived Keepalived:RSPool ${RSP_UUID} Keepalived:SLBMaster ${VIP_UUID} vip_port)
     VIP_VHOST=$(coreval Keepalived Keepalived:RSPool ${RSP_UUID} Keepalived:SLBMaster ${VIP_UUID} vip_vhost)
     VIP_ALG=$(coreval   Keepalived Keepalived:RSPool ${RSP_UUID} Keepalived:SLBMaster ${VIP_UUID} vip_alg)
+    VIP_PROTO=$(coreval Keepalived Keepalived:RSPool ${RSP_UUID} Keepalived:SLBMaster ${VIP_UUID} vip_proto)
+    VIP_SS_IP=$(coreval Keepalived Keepalived:RSPool ${RSP_UUID} Keepalived:SLBMaster ${VIP_UUID} vip_sorry_ip)
+    VIP_SS_PORT=$(coreval    Keepalived Keepalived:RSPool ${RSP_UUID} Keepalived:SLBMaster ${VIP_UUID} vip_sorry_port)
+    VIP_PT=$(coreval    Keepalived Keepalived:RSPool ${RSP_UUID} Keepalived:SLBMaster ${VIP_UUID} vip_pt)
+    VIP_PG=$(coreval    Keepalived Keepalived:RSPool ${RSP_UUID} Keepalived:SLBMaster ${VIP_UUID} vip_pg)
+
+    [ ! -z "${VIP_SS_IP}" -a -z "${VIP_SS_PORT}" ] && fatal "ssport"
+    case "${VIP_TYPE}" in
+        "v4")
+            PG_DEFAULT=32
+            [ ! -z "${VIP_PG}" -a ${VIP_PG} -lt 1 -o ${VIP_PG} -gt 32 ] && fatal "pg_v4"
+        ;;
+        "v6")
+            PG_DEFAULT=128
+            [ ! -z "${VIP_PG}" -a ${VIP_PG} -lt 1 -o ${VIP_PG} -gt 128 ] && fatal "pg_v6"
+        ;;
+    esac
+
+    PT_DEFAULT=300
+
+    [ -z "${VIP_PT}" ] && VIP_PT=${PT_DEFAULT}
+    [ -z "${VIP_PG}" ] && VIP_PG=${PG_DEFAULT}
+
     cat <<_EOF_
 virtual_server ${VIP_IP} ${VIP_PORT} {
     delay_loop 30
     lb_algo ${VIP_ALG}
     lb_kind NAT
-    persistence_timeout 50
-    protocol TCP
-    persistence_granularity 32
+    persistence_timeout ${VIP_PT}
+    persistence_granularity ${VIP_PG}
+    protocol ${VIP_PROTO}
+    smtp_alert
     virtualhost ${VIP_VHOST}
-    alpha
 _EOF_
+
+    [ -z "${VIP_SS_IP}" ] || echo "    sorry_server ${VIP_SS_IP} ${VIP_SS_PORT}"
 }
 
 _get_vip_vhost() {
