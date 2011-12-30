@@ -10,6 +10,7 @@ global_defs {
     notification_email {
         @NOTIFICATIONS@
     }
+    smtp_server @SMTP_SERVER@
     notification_email_from @NOTIFICATIONS@
     router_id @ROUTERID@
 }

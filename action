@@ -39,10 +39,8 @@ Module.update() {
     syncd_iface=$(coreval Keepalived syncd_iface)
     nat_gw_ip=$(coreval Keepalived nat_gw_ip)
     notification_email=$(coreval Keepalived notifications)
+    smtp_server=$(coreval Keepalived smtp_server)
     router_id=$(coreval Keepalived router_id)
-
-    [ -z "${external_iface}" ] && exiterror "No external interface defined"
-    [ -z "${syncd_iface}" ] && exiterror "No syncd interface defined"
 
     if [ "${m_s}" = "slave" ]; then
         echo "slave" > active_slave
@@ -120,6 +118,7 @@ Module.update() {
         sed -e "s/@SYNCINTF@/${syncd_iface}/"   | \
         sed -e "s/@NOTIFICATIONS@/${notification_email}/"   | \
         sed -e "s/@ROUTERID@/${router_id}/"   | \
+        sed -e "s/@SMTP_SERVER@/${smtp_server}/"   | \
         sed -e "s/@PRIO@/100/" > keepalived.conf
     authd installfile keepalived.conf /etc/keepalived/
     authd installfile keepalived_template.conf /etc/keepalived/
