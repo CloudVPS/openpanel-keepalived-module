@@ -22,6 +22,10 @@ _create_pool() {
     VHOST=$2
 
     RSP_HC=$(coreval Keepalived Keepalived:RSPool ${uuid} rsp_healthcheck)
+    RSP_HC_TIMEOUT=$(coreval Keepalived Keepalived:RSPool ${uuid} rsp_hc_timeout)
+    RSP_HC_RETRY=$(coreval Keepalived Keepalived:RSPool ${uuid} rsp_hc_retry)
+    RSP_HC_RT_DELAY=$(coreval Keepalived Keepalived:RSPool ${uuid} rsp_hc_rt_delay)
+
     if [ "${RSP_HC}" = "HTTP_GET" -o "${RSP_HC}" = "SSL_GET" ]; then
         RSP_HC_URL=$(coreval Keepalived Keepalived:RSPool ${uuid} rsp_hc_url)
         RSP_HC_CODE=$(coreval Keepalived Keepalived:RSPool ${uuid} rsp_hc_retcode)
@@ -68,16 +72,16 @@ _EOF_
                 digest ${RSP_HC_URLDIGEST}
             }
             connect_port ${RS_PORT}
-            connect_timeout 3
-            nb_get_retry 3
-            delay_before_retry 3
+            connect_timeout ${RSP_HC_TIMEOUT}
+            nb_get_retry ${RSP_HC_RETRY}
+            delay_before_retry ${RSP_HC_RT_DELAY}
         }
 _EOF_
         elif [ "${RSP_HC}" = "TCP_CHECK" ]; then
             cat <<_EOF_
         ${RSP_HC} {
             connect_port ${RSP_HC_PORT}
-            connect_timeout 3
+            connect_timeout ${RSP_HC_TIMEOUT}
         }
 _EOF_
         elif [ "${RSP_HC}" = "SMTP_CHECK" ]; then
@@ -87,9 +91,9 @@ _EOF_
                 connect_ip ${RS_IP}
                 connect_port ${RS_PORT}
             }
-            connect_timeout 3
-            retry 3
-            delay_before_retry 2
+            connect_timeout ${RSP_HC_TIMEOUT}
+            retry ${RSP_HC_RETRY}
+            delay_before_retry ${RSP_HC_RT_DELAY}
         }
 _EOF_
         fi

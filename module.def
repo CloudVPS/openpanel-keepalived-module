@@ -102,7 +102,7 @@ class Keepalived:RSPool     < uuid a48532dc-4799-4a9e-a504-964db9659690
                             < description Create loadbalanced services
                             < capabilities update create delete admin
                             < listview rsp_description rsp_healthcheck
-                            < required id rsp_description rsp_healthcheck
+                            < required id rsp_description rsp_healthcheck rsp_hc_timeout rsp_hc_retry rsp_hc_rt_delay
 
     string rsp_description  : Description
                             < tooltip An illustrative description of this pool
@@ -113,6 +113,7 @@ class Keepalived:RSPool     < uuid a48532dc-4799-4a9e-a504-964db9659690
 
     string rsp_hc_tcp_port  : Healthcheck TCP port
                             < tooltip Is only used for the TCP-check
+                            < regexp ^(0|([1-9]\d{0,3}|[1-5]\d{4}|[6][0-5][0-5]([0-2]\d|[3][0-5])))$
 
     string rsp_hc_url       : File to check with HTTP/SSL-check
                             < regexp [:_urlvalid:]
@@ -120,6 +121,18 @@ class Keepalived:RSPool     < uuid a48532dc-4799-4a9e-a504-964db9659690
 
     string rsp_hc_retcode   : HTTP Response to expect
                             < default 200
+                            < regexp [:numbers:]
+
+    string rsp_hc_timeout   : Check timeout (seconds)
+                            < default 5
+                            < regexp [:numbers:]
+
+    string rsp_hc_retry     : Retry checks
+                            < default 3
+                            < regexp [:numbers:]
+
+    string rsp_hc_rt_delay  : Retry delay (seconds)
+                            < default 20
                             < regexp [:numbers:]
 
 # ----------------------------------------------------------------------------
