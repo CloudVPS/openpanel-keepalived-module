@@ -183,9 +183,12 @@ Keepalived:Slave.update() {
     exitok
 }
 
-Keepalived:Status.listobjects() {
+Keepalived:Status.delete() {
+    exiterror "You cannot delete this bogus object"
+}
 
-    link="<iframe src=\"javascript:_construct_src('html/keepalived-status.html')\"></iframe>"
+Keepalived:Status.listobjects() {
+    link="<iframe src=\"/keepalived/keepalived-status.html\" style=\"width: 600px; height: 1000px; border: 0px;\"></iframe>"
     link=$(echo ${link} | sed -e 's/</\&lt;/g' | sed -e 's/>/\&gt;/g')
   cat << _EOF_
 <?xml version="1.0" encoding="UTF-8"?>

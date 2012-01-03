@@ -40,6 +40,20 @@ def fetch_slave_status(slip):
     else:
         return "<strong>No status found for %s!</strong>" % (slip)
 
+def html_head():
+    print """<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+  <head>
+    <meta http-equiv="refresh" content="30" />
+    <title>Keepalived Status Page</title>
+  </head>
+  <body>"""
+
+def html_bottom():
+    print """  </body>
+</html>"""
+
 c = CoreSession()
 c.login()
 
@@ -68,6 +82,8 @@ for v in vips:
 for r in rservers:
     tree[rservers[r]['parentid']]['realservers'].append(rservers[r])
 
+html_head()
+
 for i in tree:
     print "<h1>Information for pool: %s</h1>" % (tree[i]['description'])
 
@@ -82,11 +98,11 @@ for i in tree:
     for r in tree[i]['realservers']:
         keyname = str(r['rs_ip']+":"+r['rs_port'])
         if r['rs_enabled'] == False:
-            print '<li>%s:%s <img src="disabled.png" title="disabled" alt="disabled"/></li>' % (r['rs_ip'], r['rs_port'])
+            print '<li>%s:%s <img src="/keepalived/cross.png" title="disabled" alt="disabled"/></li>' % (r['rs_ip'], r['rs_port'])
         elif keyname in acttree:
-            print '<li>%s:%s <img src="up.png" title="up" alt="up"/></li>' % (r['rs_ip'], r['rs_port'])
+            print '<li>%s:%s <img src="/keepalived/tick.png" title="up" alt="up"/></li>' % (r['rs_ip'], r['rs_port'])
         else:
-            print '<li>%s:%s <img src="down.png" title="down" alt="down"/></li>' % (r['rs_ip'], r['rs_port'])
+            print '<li>%s:%s <img src="/keepalived/error.png" title="down" alt="down"/></li>' % (r['rs_ip'], r['rs_port'])
     print "</ul>"
 
 print "<p>Master Keepalived status:<br />%s</p>" % (keepalived_check)
@@ -102,3 +118,4 @@ if slaves['info']['total'] > 0:
 else:
     print "<p>No slaves configured</p>"
 
+html_bottom()

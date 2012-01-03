@@ -1,1 +1,1 @@
-* * * * * root    [ -f /etc/keepalived/keepalived.conf ] && /var/openpanel/tools/openpanel-keepalived-status > /var/openpanel/modules/Keepalived.module/html/keepalived-status.html
+* * * * * root    [ -f /etc/keepalived/keepalived.conf ] && /var/openpanel/tools/openpanel-keepalived-status > /var/openpanel/http/keepalived/keepalived-status.html
