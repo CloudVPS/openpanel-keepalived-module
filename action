@@ -188,15 +188,16 @@ Keepalived:Status.delete() {
 }
 
 Keepalived:Status.listobjects() {
-    link="<iframe src=\"/keepalived/keepalived-status.html\" style=\"width: 600px; height: 1000px; border: 0px;\"></iframe>"
+    link="<iframe src=\"/modules/keepalived/keepalived-status.html\" style=\"width: 600px; height: 1000px; border: 0px;\"></iframe>"
     link=$(echo ${link} | sed -e 's/</\&lt;/g' | sed -e 's/>/\&gt;/g')
   cat << _EOF_
 <?xml version="1.0" encoding="UTF-8"?>
 <dict>
   <dict id="objects">
     <dict id="Keepalived:Status" type="class">
-      <dict id="There are no backups yet" type="object">
+      <dict id="statuslink" type="object">
         <string id="status">${link}</string>
+        <string id="class">Keepalived:Status</string>
       </dict>
     </dict>
   </dict>

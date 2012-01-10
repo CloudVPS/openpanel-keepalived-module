@@ -14,8 +14,8 @@ BUILD_ROOT=$(CURDIR)/debian/tmp
 install:
 	rm -rf ${BUILD_ROOT}
 	mkdir -p ${BUILD_ROOT}/var/openpanel/modules/Keepalived.module
-	mkdir -p ${BUILD_ROOT}/var/openpanel/http/keepalived/
-	cp http/* ${BUILD_ROOT}/var/openpanel/http/keepalived/
+	mkdir -p ${BUILD_ROOT}/var/openpanel/http/modules/keepalived/
+	cp http/* ${BUILD_ROOT}/var/openpanel/http/modules/keepalived/
 	mkdir -p ${BUILD_ROOT}/var/openpanel/modules/Keepalived.module/html
 	cp html/* ${BUILD_ROOT}/var/openpanel/modules/Keepalived.module/html/
 	install -m 755 action ${BUILD_ROOT}/var/openpanel/modules/Keepalived.module/action

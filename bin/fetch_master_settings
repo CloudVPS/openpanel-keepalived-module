@@ -120,12 +120,15 @@ if [ "${KEEPALIVED}" = "true" ]; then
 	NOW=$(date)
 	ME=$(hostname -f)
 	echo "<p>Information on ${ME}: <br />" > /tmp/slavestatus
-	echo "Last update: ${NOW}< br/>" >> /tmp/slavestatus
+	echo "Last update: ${NOW}<br />" >> /tmp/slavestatus
 	
 	if [ -f /var/run/keepalived.pid ]; then 
 	    KPID=$(cat /var/run/keepalived.pid)
 	    if [ -d /proc/${KPID} ]; then
 	        echo "Keepalived running. Pid: ${KPID}<br />" >> /tmp/slavestatus
+            echo "<pre>" >> /tmp/slavestatus
+            /var/openpanel/tools/openpanel-keepalived-status >> /tmp/slavestatus
+            echo "</pre>" >> /tmp/slavestatus
 	    else
 	        echo "Pidfile for Keepalived found, but it's not running<br />" >> /tmp/slavestatus
 	    fi

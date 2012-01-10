@@ -98,11 +98,11 @@ for i in tree:
     for r in tree[i]['realservers']:
         keyname = str(r['rs_ip']+":"+r['rs_port'])
         if r['rs_enabled'] == False:
-            print '<li>%s:%s <img src="/keepalived/cross.png" title="disabled" alt="disabled"/></li>' % (r['rs_ip'], r['rs_port'])
+            print '<li>%s:%s <img src="/modules/keepalived/cross.png" title="disabled" alt="disabled"/></li>' % (r['rs_ip'], r['rs_port'])
         elif keyname in acttree:
-            print '<li>%s:%s <img src="/keepalived/tick.png" title="up" alt="up"/></li>' % (r['rs_ip'], r['rs_port'])
+            print '<li>%s:%s <img src="/modules/keepalived/tick.png" title="up" alt="up"/></li>' % (r['rs_ip'], r['rs_port'])
         else:
-            print '<li>%s:%s <img src="/keepalived/error.png" title="down" alt="down"/></li>' % (r['rs_ip'], r['rs_port'])
+            print '<li>%s:%s <img src="/modules/keepalived/error.png" title="down" alt="down"/></li>' % (r['rs_ip'], r['rs_port'])
     print "</ul>"
 
 print "<p>Master Keepalived status:<br />%s</p>" % (keepalived_check)
