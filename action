@@ -59,6 +59,8 @@ Module.update() {
     fi 
     
     GLOBAL_DEFS=$(_create_global)
+    IPTABLESDIR=/etc/openpanel/iptables.d
+    DOFWRELOAD="false"
     VIPCONF=""
     STATICS=""
     VRRPS=""
@@ -122,6 +124,18 @@ Module.update() {
         sed -e "s/@PRIO@/100/" > keepalived.conf
     authd installfile keepalived.conf /etc/keepalived/
     authd installfile keepalived_template.conf /etc/keepalived/
+
+    if [ -d ${IPTABLESDIR} ]; then
+        if [ "X${VRRPCONF}" = "X" -a -f ${IPTABLESDIR}/open-vrrp.inc ]; then
+            authd deletefile ${IPTABLESDIR}/open-vrrp.inc
+            DOFWRELOAD="true"
+        elif [ "X${VRRPCONF}" != "X" -a !-f ${IPTABLESDIR}/open-vrrp.inc ]; then
+            echo  '$IPTABLES -A INPUT -p vrrp -j ACCEPT' >> open-vrrp.inc
+            authd installfile open-vrrp.inc /etc/openpanel/iptables.d
+            DOFWRELOAD="true"
+        fi
+        [ "${DOFWRELOAD}" = "true" ] && authd reloadservice iptables
+    fi
 
     [ "X${nat_gw_ip}" = "X" ] || authd runscript keepalived-enable-gw-nat ${nat_gw_ip} ${external_iface} ${syncd_iface}
     [ "X${nat_gw_ip}" = "X" ] && authd runscript keepalived-disable-gw-nat

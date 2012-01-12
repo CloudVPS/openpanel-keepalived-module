@@ -345,8 +345,14 @@ authd fileops
                             < group root
                             < perms 0644
 
+    match *.inc             : /etc/openpanel/iptables.d
+                            < user root
+                            < group root
+                            < perms 0644
+
 authd services
     service keepalived
+    service iptables
 
 authd scripts
     script keepalived-disable-gw-nat
