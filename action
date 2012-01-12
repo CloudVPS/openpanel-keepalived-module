@@ -130,8 +130,8 @@ Module.update() {
             authd deletefile ${IPTABLESDIR}/open-vrrp.inc
             DOFWRELOAD="true"
         elif [ "X${VRRPCONF}" != "X" -a !-f ${IPTABLESDIR}/open-vrrp.inc ]; then
-            echo  '$IPTABLES -A INPUT -p vrrp -j ACCEPT' >> open-vrrp.inc
-            authd installfile open-vrrp.inc /etc/openpanel/iptables.d
+            echo  '$IPTABLES -A openpanel -p vrrp -j openpanel-allow' >> open-vrrp.inc
+            authd installfile open-vrrp.inc ${IPTABLESDIR}
             DOFWRELOAD="true"
         fi
         [ "${DOFWRELOAD}" = "true" ] && authd runscript iptables-update
