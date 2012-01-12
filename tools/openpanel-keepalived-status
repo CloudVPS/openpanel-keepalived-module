@@ -58,7 +58,11 @@ c = CoreSession()
 c.login()
 
 if c.rpc.getrecords(classid='Keepalived')['body']['data']['Keepalived']['keepalived']['master_slave'] == "slave":
+    html_head()
+    print "<pre>"
     print get_ipvsadm(True)
+    print "</pre>"
+    html_bottom()
     exit(0)
 
 pools    = c.rpc.getrecords(classid='Keepalived:RSPool')['body']['data']['Keepalived:RSPool']
