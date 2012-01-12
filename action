@@ -134,7 +134,7 @@ Module.update() {
             authd installfile open-vrrp.inc /etc/openpanel/iptables.d
             DOFWRELOAD="true"
         fi
-        [ "${DOFWRELOAD}" = "true" ] && authd reloadservice iptables
+        [ "${DOFWRELOAD}" = "true" ] && authd runscript iptables-update
     fi
 
     [ "X${nat_gw_ip}" = "X" ] || authd runscript keepalived-enable-gw-nat ${nat_gw_ip} ${external_iface} ${syncd_iface}
