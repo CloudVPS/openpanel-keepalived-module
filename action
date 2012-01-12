@@ -72,7 +72,7 @@ Module.update() {
         key=$(coreval Keepalived Keepalived:Slaves ${uuid} slave_key)
         descr=$(coreval Keepalived Keepalived:Slaves ${uuid} slave_description)
 
-        echo -e "#${descr}:\nfrom=\"${ipaddr}\" ${key}" >> authorized_keys
+        echo -e "#${descr}:\nfrom=\"${ipaddr}\" ${key}" r> authorized_keys
     done
 
     [ -s authorized_keys ] && authd installfile authorized_keys /etc/openpanel/ha/.ssh/
@@ -130,7 +130,7 @@ Module.update() {
             authd deletefile ${IPTABLESDIR}/open-vrrp.inc
             DOFWRELOAD="true"
         elif [ "X${VRRPCONF}" != "X" -a !-f ${IPTABLESDIR}/open-vrrp.inc ]; then
-            echo  '$IPTABLES -A openpanel -p vrrp -j openpanel-allow' >> open-vrrp.inc
+            echo  '$IPTABLES -A openpanel -p vrrp -j openpanel-allow' > open-vrrp.inc
             authd installfile open-vrrp.inc ${IPTABLESDIR}
             DOFWRELOAD="true"
         fi
