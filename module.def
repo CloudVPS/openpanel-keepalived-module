@@ -116,7 +116,7 @@ class Keepalived:RSPool     < uuid a48532dc-4799-4a9e-a504-964db9659690
 
     string rsp_hc_tcp_port  : Healthcheck TCP port
                             < tooltip Is only used for the TCP-check
-                            < regexp ^(0|([1-9]\d{0,3}|[1-5]\d{4}|[6][0-5][0-5]([0-2]\d|[3][0-5])))$
+                            < regexp ^(0|([1-9]\\d{0,3}|[1-5]\\d{4}|[6][0-5][0-5]([0-2]\\d|[3][0-5])))$
                             < gridhide true
 
     string rsp_hc_url       : File to check with HTTP/SSL-check
@@ -167,7 +167,7 @@ class Keepalived:Realserver < uuid bd6ca88e-5aa2-4bc6-8ec2-416ffda76c5a
                             < gridwidth 45
 
     string rs_port          : Back-end port
-                            < regexp [:numbers:]
+                            < regexp ^(0|([1-9]\\d{0,3}|[1-5]\\d{4}|[6][0-5][0-5]([0-2]\\d|[3][0-5])))$
                             < example 80
                             < gridwidth 25
 
@@ -205,7 +205,7 @@ class Keepalived:SLBMaster  < uuid efde574b-c31e-4ed8-8062-58c590f5c7a8
                             < gridwidth 45
 
     string vip_port         : Front-end port
-                            < regexp [:numbers:]
+                            < regexp ^(0|([1-9]\\d{0,3}|[1-5]\\d{4}|[6][0-5][0-5]([0-2]\\d|[3][0-5])))$
                             < example 80
                             < gridwidth 25
 
