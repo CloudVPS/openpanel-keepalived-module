@@ -74,7 +74,7 @@ Module.update() {
         key=$(coreval Keepalived Keepalived:Slaves ${uuid} slave_key)
         descr=$(coreval Keepalived Keepalived:Slaves ${uuid} slave_description)
 
-        echo -e "#${descr}:\nfrom=\"${ipaddr}\" ${key}" r> authorized_keys
+        echo -e "#${descr}:\nfrom=\"${ipaddr}\" ${key}" > authorized_keys
     done
 
     [ -s authorized_keys ] && authd installfile authorized_keys /etc/openpanel/ha/.ssh/
