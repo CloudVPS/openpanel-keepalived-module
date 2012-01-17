@@ -259,6 +259,7 @@ class Keepalived:Slave      < uuid d8d2cd1c-3420-4030-8aeb-72fa15d91aad
                             < title Slave settings
                             < description Configure HA Slave settings
                             < capabilities update admin
+                            < explanation html/keepalived-slavesettings.html
                             < listview id slave_prio slave_key slave_master_ip
                             < required id slave_prio slave_key slave_master_ip
 
