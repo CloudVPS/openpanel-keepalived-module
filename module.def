@@ -358,3 +358,5 @@ authd scripts
     script keepalived-disable-gw-nat
     script keepalived-enable-gw-nat
     script iptables-update
+    script keepalived-fetch-master-settings
+    script openpanel-keepalived-status

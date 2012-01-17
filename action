@@ -53,6 +53,8 @@ Module.update() {
         authd installfile syncd_iface /etc/openpanel/ha
         authd installfile notifications /etc/openpanel/ha
         authd installfile routerid /etc/openpanel/ha
+        authd runscript keepalived-fetch-master-settings
+        authd runscript openpanel-keepalived-status > /var/openpanel/http/modules/keepalived/keepalived-status.html
         exitok
     else
         authd deletefile /etc/openpanel/ha/active_slave
@@ -140,6 +142,9 @@ Module.update() {
     [ "X${nat_gw_ip}" = "X" ] || authd runscript keepalived-enable-gw-nat ${nat_gw_ip} ${external_iface} ${syncd_iface}
     [ "X${nat_gw_ip}" = "X" ] && authd runscript keepalived-disable-gw-nat
     authd reloadservice keepalived
+
+    authd runscript openpanel-keepalived-status > /var/openpanel/http/modules/keepalived/keepalived-status.html
+
     exitok
 }
 
