@@ -1,4 +1,4 @@
-#!/usr/bin/make -f
+#!/usr/ksbin/make -f
 # This file is part of OpenPanel - The Open Source Control Panel
 # OpenPanel is free software: you can redistribute it and/or modify it 
 # under the terms of the GNU General Public License as published by the Free 
@@ -28,6 +28,7 @@ install:
 	mkdir -p ${BUILD_ROOT}/var/openpanel/tools/
 	install -m 755 tools/keepalived-disable-gw-nat ${BUILD_ROOT}/var/openpanel/tools/keepalived-disable-gw-nat
 	install -m 755 tools/keepalived-enable-gw-nat ${BUILD_ROOT}/var/openpanel/tools/keepalived-enable-gw-nat
+	install -m 755 tools/keepalived-fetch-master-settings ${BUILD_ROOT}/var/openpanel/tools/keepalived-fetch-master-settings
 	install -m 755 tools/openpanel-keepalived-status ${BUILD_ROOT}/var/openpanel/tools/openpanel-keepalived-status
 	mkdir -p ${BUILD_ROOT}/etc/init.d
 	install -m 755 etc/init.d/keepalived-nat-gw ${BUILD_ROOT}/etc/init.d/keepalived-nat-gw
