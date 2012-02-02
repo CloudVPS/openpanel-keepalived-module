@@ -34,7 +34,7 @@ case "$1" in
         }
         id openpanel-ha > /dev/null 2>&1 || {
             adduser --system --no-create-home --gecos "Openpanel HA user" \
-                --disabled-password --ingroup openpaneluser \
+                --disabled-password --shell /bin/sh --ingroup openpaneluser \
                 --home /etc/openpanel/ha openpanel-ha
         }
 
