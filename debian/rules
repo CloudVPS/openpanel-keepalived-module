@@ -1,4 +1,4 @@
-#!/usr/sbin/make -f
+#!/usr/bin/make -f
 # This file is part of OpenPanel - The Open Source Control Panel
 # OpenPanel is free software: you can redistribute it and/or modify it 
 # under the terms of the GNU General Public License as published by the Free 
