@@ -53,8 +53,6 @@ Module.update() {
         authd installfile syncd_iface /etc/openpanel/ha
         authd installfile notifications /etc/openpanel/ha
         authd installfile routerid /etc/openpanel/ha
-        authd runscript keepalived-fetch-master-settings
-        authd runscript openpanel-keepalived-status > /var/openpanel/http/modules/keepalived/keepalived-status.html
         exitok
     else
         authd deletefile /etc/openpanel/ha/active_slave
@@ -198,6 +196,9 @@ Keepalived:Slave.update() {
 
     authd installfile prio /etc/openpanel/ha
     authd installfile slave_master_ip /etc/openpanel/ha
+
+    authd runscript keepalived-fetch-master-settings
+    authd runscript openpanel-keepalived-status > /var/openpanel/http/modules/keepalived/keepalived-status.html
 
     exitok
 }
