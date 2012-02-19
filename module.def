@@ -243,7 +243,7 @@ class Keepalived:SLBMaster  < uuid efde574b-c31e-4ed8-8062-58c590f5c7a8
                             < gridhide true
 
     string vip_sorry_port   : Sorry server (Port)
-                            < regexp ^(0|([1-9]\d{0,3}|[1-5]\d{4}|[6][0-5][0-5]([0-2]\d|[3][0-5])))$
+                            < regexp ^(0|([1-9]\\d{0,3}|[1-5]\\d{4}|[6][0-5][0-5]([0-2]\\d|[3][0-5])))$
                             < gridhide true
 
 # ----------------------------------------------------------------------------
