@@ -56,6 +56,12 @@ _create_pool() {
             GH_ARGS="${GH_ARGS} --url ${RSP_HC_URL}"
             GH_ARGS="${GH_ARGS} --server ${RS_IP}"
 
+            CURLURL="${VHOST}/${RSP_HC_URL}"
+            if [ "${RSP_HC}" = "SSL_GET" ]; then
+                curl -O /dev/null -s -m 1 -x ${RS_IP}:${RS_PORT} https://${CURLURL} || fatal "nohash"
+            else
+                curl -O /dev/null -s -m 1 -x ${RS_IP}:${RS_PORT} http://${CURLURL} || fatal "nohash"
+            fi
             RSP_HC_URLDIGEST=$(/usr/bin/genhash ${GH_ARGS} | awk ' { print $3 } ')
             [ "X${RSP_HC_URLDIGEST}" = "X" ] && fatal "nohash"
         fi
