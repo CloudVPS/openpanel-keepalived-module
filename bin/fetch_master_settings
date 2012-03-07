@@ -56,6 +56,7 @@ EXTERNAL_IFACE=$(cat "${SDIR}/external_iface")
 SYNCD_IFACE=$(cat "${SDIR}/syncd_iface")
 ROUTERID=$(cat "${SDIR}/routerid")
 NOTIFICATION_EMAIL=$(cat "${SDIR}/notifications")
+SMTP_SERVER=$(cat "${SDIR}/smtp_server")
 
 
 [ -z "${PRIO}" -o -z "${MASTER}" ] && fatal "Invalid values for master ip or priority"
@@ -68,6 +69,7 @@ if [ $? -eq 0 ]; then
     cat /tmp/keepalived_template.conf | \
         sed -e "s/@ROUTERID@/${ROUTERID}/" | \
         sed -e "s/@NOTIFICATIONS@/${NOTIFICATION_EMAIL}/" | \
+        sed -e "s/@SMTP_SERVER@/${SMTP_SERVER}/" | \
         sed -e "s/@EXTINTF@/${EXTERNAL_IFACE}/" | \
         sed -e "s/@SYNCINTF@/${SYNCD_IFACE}/" | \
         sed -e "s/@PRIO@/${PRIO}/" > /etc/keepalived/keepalived.conf.tmp

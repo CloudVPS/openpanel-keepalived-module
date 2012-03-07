@@ -47,11 +47,13 @@ Module.update() {
         echo "${external_iface}" > external_iface
         echo "${syncd_iface}" > syncd_iface
         echo "${notification_email}" > notifications
+        echo "${smtp_server}" > smtp_server
         echo "${router_id}" > routerid
         authd installfile active_slave /etc/openpanel/ha
         authd installfile external_iface /etc/openpanel/ha
         authd installfile syncd_iface /etc/openpanel/ha
         authd installfile notifications /etc/openpanel/ha
+        authd installfile smtp_server /etc/openpanel/ha
         authd installfile routerid /etc/openpanel/ha
         exitok
     else
