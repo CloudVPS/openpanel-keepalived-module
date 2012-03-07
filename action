@@ -42,6 +42,9 @@ Module.update() {
     smtp_server=$(coreval Keepalived smtp_server)
     router_id=$(coreval Keepalived router_id)
 
+    IPTABLESDIR=/etc/openpanel/iptables.d
+    echo  '$IPTABLES -A openpanel -p vrrp -j openpanel-allow' > open-vrrp.inc
+
     if [ "${m_s}" = "slave" ]; then
         echo "slave" > active_slave
         echo "${external_iface}" > external_iface
@@ -55,13 +58,16 @@ Module.update() {
         authd installfile notifications /etc/openpanel/ha
         authd installfile smtp_server /etc/openpanel/ha
         authd installfile routerid /etc/openpanel/ha
+
+        authd installfile open-vrrp.inc ${IPTABLESDIR}
+        authd runscript iptables-update
+
         exitok
     else
         authd deletefile /etc/openpanel/ha/active_slave
     fi 
     
     GLOBAL_DEFS=$(_create_global)
-    IPTABLESDIR=/etc/openpanel/iptables.d
     DOFWRELOAD="false"
     VIPCONF=""
     STATICS=""
@@ -132,7 +138,6 @@ Module.update() {
             authd deletefile ${IPTABLESDIR}/open-vrrp.inc
             DOFWRELOAD="true"
         elif [ "X${VRRPCONF}" != "X" -a ! -f ${IPTABLESDIR}/open-vrrp.inc ]; then
-            echo  '$IPTABLES -A openpanel -p vrrp -j openpanel-allow' > open-vrrp.inc
             authd installfile open-vrrp.inc ${IPTABLESDIR}
             DOFWRELOAD="true"
         fi
