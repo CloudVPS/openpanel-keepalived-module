@@ -129,7 +129,7 @@ Module.update() {
         if [ "X${VRRPCONF}" = "X" -a -f ${IPTABLESDIR}/open-vrrp.inc ]; then
             authd deletefile ${IPTABLESDIR}/open-vrrp.inc
             DOFWRELOAD="true"
-        elif [ "X${VRRPCONF}" != "X" -a !-f ${IPTABLESDIR}/open-vrrp.inc ]; then
+        elif [ "X${VRRPCONF}" != "X" -a ! -f ${IPTABLESDIR}/open-vrrp.inc ]; then
             echo  '$IPTABLES -A openpanel -p vrrp -j openpanel-allow' > open-vrrp.inc
             authd installfile open-vrrp.inc ${IPTABLESDIR}
             DOFWRELOAD="true"
