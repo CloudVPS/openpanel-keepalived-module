@@ -145,45 +145,6 @@ class Keepalived:RSPool     < uuid a48532dc-4799-4a9e-a504-964db9659690
                             < gridhide true
 
 # ----------------------------------------------------------------------------
-class Keepalived:Realserver < uuid bd6ca88e-5aa2-4bc6-8ec2-416ffda76c5a
-                            < version 1
-                            < requires Keepalived:RSPool
-                            < indexing auto
-                            < uniquein parent
-                            < allchildren true
-                            < shortname realservers
-                            < sortindex 90
-                            < title Back-end servers
-                            < preface html/realserver-preface.html
-                            < description Create back-end servers used by a loadbalanced service
-                            < capabilities update create delete admin
-                            < listview rs_enabled rs_description rs_ip rs_port
-                            < required id rs_ip rs_port rs_description
-
-
-    string rs_ip            : Back-end IP Address
-                            < regexp [:ip:]
-                            < example ::1
-                            < gridwidth 45
-
-    string rs_port          : Back-end port
-                            < regexp ^(0|([1-9]\\d{0,3}|[1-5]\\d{4}|[6][0-5][0-5]([0-2]\\d|[3][0-5])))$
-                            < example 80
-                            < gridwidth 25
-
-    string rs_weight        : Weight
-                            < regexp [:numbers:]
-                            < default 100
-                            < gridhide true
-
-    bool rs_enabled         : Enabled
-                            < default false
-                            < gridwidth 10
-
-    string rs_description   : Description
-                            < tooltip An illustrative description for this back-end server
-
-# ----------------------------------------------------------------------------
 class Keepalived:SLBMaster  < uuid efde574b-c31e-4ed8-8062-58c590f5c7a8
                             < version 1
                             < requires Keepalived:RSPool
@@ -245,6 +206,45 @@ class Keepalived:SLBMaster  < uuid efde574b-c31e-4ed8-8062-58c590f5c7a8
     string vip_sorry_port   : Sorry server (Port)
                             < regexp ^(0|([1-9]\\d{0,3}|[1-5]\\d{4}|[6][0-5][0-5]([0-2]\\d|[3][0-5])))$
                             < gridhide true
+
+# ----------------------------------------------------------------------------
+class Keepalived:Realserver < uuid bd6ca88e-5aa2-4bc6-8ec2-416ffda76c5a
+                            < version 1
+                            < requires Keepalived:RSPool
+                            < indexing auto
+                            < uniquein parent
+                            < allchildren true
+                            < shortname realservers
+                            < sortindex 90
+                            < title Back-end servers
+                            < preface html/realserver-preface.html
+                            < description Create back-end servers used by a loadbalanced service
+                            < capabilities update create delete admin
+                            < listview rs_enabled rs_description rs_ip rs_port
+                            < required id rs_ip rs_port rs_description
+
+
+    string rs_ip            : Back-end IP Address
+                            < regexp [:ip:]
+                            < example ::1
+                            < gridwidth 45
+
+    string rs_port          : Back-end port
+                            < regexp ^(0|([1-9]\\d{0,3}|[1-5]\\d{4}|[6][0-5][0-5]([0-2]\\d|[3][0-5])))$
+                            < example 80
+                            < gridwidth 25
+
+    string rs_weight        : Weight
+                            < regexp [:numbers:]
+                            < default 100
+                            < gridhide true
+
+    bool rs_enabled         : Enabled
+                            < default false
+                            < gridwidth 10
+
+    string rs_description   : Description
+                            < tooltip An illustrative description for this back-end server
 
 # ----------------------------------------------------------------------------
 class Keepalived:Slave      < uuid d8d2cd1c-3420-4030-8aeb-72fa15d91aad
