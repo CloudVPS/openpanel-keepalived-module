@@ -34,10 +34,14 @@ case "$1" in
         }
         id openpanel-ha > /dev/null 2>&1 || {
             adduser --system --no-create-home --gecos "Openpanel HA user" \
-                --disabled-password --shell /bin/sh --ingroup openpaneluser \
+                --disabled-password --shell /bin/sh --ingroup openpanel-core \
                 --home /etc/openpanel/ha openpanel-ha
         }
 
+        # Force openpanel-ha to group openpanel-core if it's still in openpaneluser
+        id openpanel-ha | awk ' { print $2 } ' | grep -q openpaneluser && {
+            usermod -g openpanel-core openpanel-ha
+        }
         mkdir -p /etc/openpanel/ha
         mkdir -p /etc/openpanel/ha/slavestatus
         mkdir -p /etc/openpanel/ha/.ssh
