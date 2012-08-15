@@ -102,8 +102,10 @@ if [ $? -eq 0 ]; then
 
     [ $? -eq 0 ] && {
     if [ -f ${SDIR}/nat-gw ]; then
-        diff -q ${SDIR}/nat-gw.tmp ${SDIR}/nat-gw || \
-                /etc/init.d/keepalived-nat-gw restart
+        diff -q ${SDIR}/nat-gw.tmp ${SDIR}/nat-gw || {\
+                mv ${SDIR}/nat-gw.tmp ${SDIR}/nat-gw && \
+                /etc/init.d/keepalived-nat-gw restart \
+        }
     else
         mv ${SDIR}/nat-gw.tmp ${SDIR}/nat-gw
         /usr/sbin/update-rc.d keepalived-nat-gw defaults
@@ -141,6 +143,25 @@ if [ "${KEEPALIVED}" = "true" ]; then
     
     MYIP=$(ip ro get ${MASTER} | grep src | awk ' { print $NF } ')
     put ${MASTER} /tmp/slavestatus /etc/openpanel/ha/slavestatus/${MYIP}
+fi
+
+get ${MASTER} /etc/openpanel/rc.firewall /tmp/rc.firewall
+
+if [ $? -eq 0 ]; then
+    if [ -f /etc/openpanel/rc.firewall ]; then
+        diff -q /tmp/rc.firewall /etc/openpanel/rc.firewall || { \
+            mv /tmp/rc.firewall /etc/openpanel/rc.firewall && \
+            /etc/init.d/iptables restart \
+        }
+    else
+        mv /tmp/rc.firewall /etc/openpanel/rc.firewall && \
+        /etc/init.d/iptables restart
+    fi
+else
+    if [ -f /etc/openpanel/rc.firewall ]; then
+        /etc/init.d/iptables stop
+        rm -f /etc/openpanel/rc.firewall
+    fi
 fi
 
 exit 0
