@@ -38,6 +38,7 @@ Module.update() {
     external_iface=$(coreval Keepalived external_iface)
     syncd_iface=$(coreval Keepalived syncd_iface)
     nat_gw_ip=$(coreval Keepalived nat_gw_ip)
+    vrrp_ip=$(coreval Keepalived vrrp_ip)
     notification_email=$(coreval Keepalived notifications)
     smtp_server=$(coreval Keepalived smtp_server)
     router_id=$(coreval Keepalived router_id)
@@ -89,6 +90,7 @@ Module.update() {
     [ -s authorized_keys -a "X${nat_gw_ip}" = "X" ] && exiterror "You need to configure the NAT GW IP for VRRP to work"
 
     [ "X${nat_gw_ip}" = "X" ] || VRRPS="${VRRPS} ${nat_gw_ip}"
+    [ "X${vrrp_ip}" = "X" ] || VRRPS="${VRRPS} ${vrrp_ip}"
 
     for uuid in `coreval --loop Keepalived Keepalived:RSPool`; do
         for slbuuid in `coreval --loop Keepalived Keepalived:RSPool ${uuid} Keepalived:SLBMaster`; do

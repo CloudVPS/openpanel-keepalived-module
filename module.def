@@ -64,6 +64,10 @@ class Keepalived            < uuid b7bdba75-f440-4d84-a5d5-ef7bfa4b78c0
                             < example 192.168.1.254
                             < tooltip This IP will be bound by VRRP and should be used as the gateway by your realservers
 
+    string vrrp_ip          : External VRRP IP
+                            < example 8.8.8.8
+                            < tooltip This IP will be bound by VRRP and should be used as the address to reach your setup
+
 
 # ----------------------------------------------------------------------------
 class Keepalived:Slaves     < uuid bc51994d-8987-4e44-add4-37afdd101fd0
