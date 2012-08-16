@@ -18,6 +18,17 @@ get() {
     return $?
 }
 
+rget() {
+    HOST=$1
+    SRC="${2}"
+    DST="${3}"
+
+    rsync -a --delete -e "ssh -o StrictHostKeyChecking=no \
+        -o PasswordAuthentication=no\
+        -i ${SDIR}/id_rsa" \
+        "openpanel-ha@${MASTER}:${SRC}" "${DST}"
+}
+
 put() {
     HOST=$1
     SRC="${2}"
@@ -104,7 +115,7 @@ if [ $? -eq 0 ]; then
     if [ -f ${SDIR}/nat-gw ]; then
         diff -q ${SDIR}/nat-gw.tmp ${SDIR}/nat-gw || {\
                 mv ${SDIR}/nat-gw.tmp ${SDIR}/nat-gw && \
-                /etc/init.d/keepalived-nat-gw restart \
+                /etc/init.d/keepalived-nat-gw restart 
         }
     else
         mv ${SDIR}/nat-gw.tmp ${SDIR}/nat-gw
@@ -151,7 +162,7 @@ if [ $? -eq 0 ]; then
     if [ -f /etc/openpanel/rc.firewall ]; then
         diff -q /tmp/rc.firewall /etc/openpanel/rc.firewall || { \
             mv /tmp/rc.firewall /etc/openpanel/rc.firewall && \
-            /etc/init.d/iptables restart \
+            /etc/init.d/iptables restart
         }
     else
         mv /tmp/rc.firewall /etc/openpanel/rc.firewall && \
@@ -162,6 +173,14 @@ else
         /etc/init.d/iptables stop
         rm -f /etc/openpanel/rc.firewall
     fi
+fi
+
+rget ${MASTER} /etc/openpanel/iptables.d /tmp/
+if [ $? -eq 0 ]; then
+    diff -qr /tmp/iptables.d/ /etc/openpanel/iptables.d/ || { \
+        rsync -a --delete /tmp/iptables.d/ /etc/openpanel/iptables.d/ && \
+            /var/openpanel/tools/iptables-update
+    }
 fi
 
 exit 0

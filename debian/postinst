@@ -42,6 +42,11 @@ case "$1" in
         id openpanel-ha | awk ' { print $2 } ' | grep -q openpaneluser && {
             usermod -g openpanel-core openpanel-ha
         }
+
+        # chown and chmod /etc/openpanel/rc.firewall to openpanel-ha can read it
+        [ -f /etc/openpanel/rc.firewall ] && chown root:openpanel-core /etc/openpanel/rc.firewall
+        [ -f /etc/openpanel/rc.firewall ] && chmod 770 /etc/openpanel/rc.firewall
+
         mkdir -p /etc/openpanel/ha
         mkdir -p /etc/openpanel/ha/slavestatus
         mkdir -p /etc/openpanel/ha/.ssh
