@@ -46,7 +46,7 @@ reload_keepalived() {
     if [ -f /var/run/keepalived.pid ]; then
         KPID=$(cat /var/run/keepalived.pid)
         if [ -d /proc/${KPID} ]; then
-            /etc/init.d/keepalived restart
+            /etc/init.d/keepalived reload
         else
             /etc/init.d/keepalived start
         fi
