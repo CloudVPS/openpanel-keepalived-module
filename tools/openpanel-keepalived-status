@@ -65,6 +65,12 @@ if c.rpc.getrecords(classid='Keepalived')['body']['data']['Keepalived']['keepali
     html_bottom()
     exit(0)
 
+if c.rpc.getrecords(classid='Keepalived:RSPool')['body']['data']['info']['total'] == 0:
+    html_head()
+    print "<h1>No configuration yet</h1>"
+    html_bottom()
+    exit(0)
+
 pools    = c.rpc.getrecords(classid='Keepalived:RSPool')['body']['data']['Keepalived:RSPool']
 rservers = c.rpc.getrecords(classid='Keepalived:Realserver')['body']['data']['Keepalived:Realserver']
 vips     = c.rpc.getrecords(classid='Keepalived:SLBMaster')['body']['data']['Keepalived:SLBMaster']
