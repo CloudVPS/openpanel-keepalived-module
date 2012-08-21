@@ -220,7 +220,7 @@ function _find_netmask() {
 
     EXTIP=$(/sbin/ip ro get ${TESTIP} | head -1 | sed -e 's/.*src \([^ ]\+\).*/\1/')
     NETMASK=$(/sbin/ip addr list | grep ${EXTIP} | sed "s#.*${EXTIP}\(/[[:digit:]]\+\).*#\1#")
-    echo "/$NETMASK"
+    echo "$NETMASK"
 }
 
 function _create_vrrp() {
@@ -233,7 +233,8 @@ function _create_vrrp() {
 
     for s in ${STATICS}; do
         echo $s | grep -q '/?' && {
-            SUFFIX=$(find_netmask $s)
+            s=$(echo $s | cut -f 1 -d /)
+            SUFFIX=$(_find_netmask $s)
             RET="${RET}\t${s}${SUFFIX} dev @EXTINTF@\n"
             continue
         }
