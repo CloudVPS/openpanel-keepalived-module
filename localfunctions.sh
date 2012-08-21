@@ -210,6 +210,19 @@ _EOF_
     fi
 }
 
+function _find_netmask() {
+    echo $1 | grep -q : && ISV6="true"
+
+    TESTIP="8.8.8.8"
+    if [ "${ISV6}" = "true" ]; then
+        TESTIP="2a00:1450:4013:c00::93"
+    fi
+
+    EXTIP=$(/sbin/ip ro get ${TESTIP} | head -1 | sed -e 's/.*src \([^ ]\+\).*/\1/')
+    NETMASK=$(/sbin/ip addr list | grep ${EXTIP} | sed "s#.*${EXTIP}\(/[[:digit:]]\+\).*#\1#")
+    echo "/$NETMASK"
+}
+
 function _create_vrrp() {
     STATICS=$(_uniq "$1")
 
@@ -219,6 +232,11 @@ function _create_vrrp() {
     VRID=$(echo ${VRRP_PASS} | tr '[a-z]' ' ' | sed -e 's/ //g' | cut -c1-2)
 
     for s in ${STATICS}; do
+        echo $s | grep -q '/?' && {
+            SUFFIX=$(find_netmask $s)
+            RET="${RET}\t${s}${SUFFIX} dev @EXTINTF@\n"
+            continue
+        }
         SUFFIX="/32"
         echo $s | grep -q : && SUFFIX="/128"
         RET="${RET}\t${s}${SUFFIX} dev @EXTINTF@\n"
