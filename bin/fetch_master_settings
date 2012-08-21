@@ -68,14 +68,14 @@ reload_ipsec() {
     fi
 }
 
+# Don't run if we aren't an active slave
+[ -f "${SDIR}/active_slave" ] || exit 0
+
 SDIR=/etc/openpanel/ha
 TMPDIR=$(mktemp -d)
 
 KEEPALIVED="true"
 RELOADIPSEC="false"
-
-# Don't run if we aren't an active slave
-[ -f "${SDIR}/active_slave" ] || exit 0
 
 MASTER=$(cat "${SDIR}/slave_master_ip")
 PRIO=$(cat "${SDIR}/prio")
@@ -225,6 +225,10 @@ fi
 
 if [ "${RELOADIPSEC}" = "true" ]; then
     reload_ipsec
+fi
+
+if [ `dirname ${TMPDIR}` = "/tmp" ]; then
+    rm -rf ${TMPDIR}
 fi
 
 exit 0
