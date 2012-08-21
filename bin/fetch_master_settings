@@ -217,10 +217,10 @@ if [ $? -eq 0 ]; then
     }
 fi
 
-rget ${MASTER} /etc/op-ipsec.d/ ${TMPDIR}/ipsec/
+rget ${MASTER} /etc/op-ipsec.d ${TMPDIR}/ipsec/
 if [ $? -eq 0 ]; then
-    diff -qr ${TMPDIR}/ipsec/ipsec.d/ /etc/op-ipsec.d/ || { \
-        rsync -a --delete ${TMPDIR}/ipsec/ipsec.d/ /etc/op-ipsec.d/ && \
+    diff -qr ${TMPDIR}/ipsec/op-ipsec.d/ /etc/op-ipsec.d/ || { \
+        rsync -a --delete ${TMPDIR}/ipsec/op-ipsec.d/ /etc/op-ipsec.d/ && \
             RELOADIPSEC="true"
     }
 fi
