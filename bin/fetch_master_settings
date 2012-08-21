@@ -55,8 +55,24 @@ reload_keepalived() {
     fi
 }
 
+reload_ipsec() {
+    if [ -f /var/run/ipsec/pluto.pid ]; then
+        PPID=$(cat /var/run/ipsec/pluto.pid)
+        if [ -d /proc/${PPID} ]; then
+            /etc/init.d/ipsec reload
+        else
+            /etc/init.d/ipsec start
+        fi
+    else 
+        /etc/init.d/ipsec start
+    fi
+}
+
 SDIR=/etc/openpanel/ha
+TMPDIR=$(mktemp -d)
+
 KEEPALIVED="true"
+RELOADIPSEC="false"
 
 # Don't run if we aren't an active slave
 [ -f "${SDIR}/active_slave" ] || exit 0
@@ -74,10 +90,10 @@ SMTP_SERVER=$(cat "${SDIR}/smtp_server")
 [ -z "${SYNCD_IFACE}" -o -z "${EXTERNAL_IFACE}" ] && fatal "External and/or syncd interface is not set"
 [ -f "${SDIR}/id_rsa" ] || fatal "There is no ssh-key I can use to login to the master"
 
-get ${MASTER} /etc/keepalived/keepalived_template.conf /tmp/keepalived_template.conf
+get ${MASTER} /etc/keepalived/keepalived_template.conf ${TMPDIR}/keepalived_template.conf
 
 if [ $? -eq 0 ]; then
-    cat /tmp/keepalived_template.conf | \
+    cat ${TMPDIR}/keepalived_template.conf | \
         sed -e "s/@ROUTERID@/${ROUTERID}/" | \
         sed -e "s/@NOTIFICATIONS@/${NOTIFICATION_EMAIL}/" | \
         sed -e "s/@SMTP_SERVER@/${SMTP_SERVER}/" | \
@@ -104,10 +120,10 @@ else
     KEEPALIVED="false"
 fi
 
-get ${MASTER} ${SDIR}/nat-gw /tmp/nat-gw
+get ${MASTER} ${SDIR}/nat-gw ${TMPDIR}/nat-gw
 
 if [ $? -eq 0 ]; then
-    cat /tmp/nat-gw | \
+    cat ${TMPDIR}/nat-gw | \
         sed -e "s/E_IFACE=.*/E_IFACE=${EXTERNAL_IFACE}/" | \
         sed -e "s/I_IFACE=.*/I_IFACE=${SYNCD_IFACE}/" > ${SDIR}/nat-gw.tmp
 
@@ -134,38 +150,38 @@ fi
 if [ "${KEEPALIVED}" = "true" ]; then
 	NOW=$(date)
 	ME=$(hostname -f)
-	echo "<p>Information on ${ME}: <br />" > /tmp/slavestatus
-	echo "Last update: ${NOW}<br />" >> /tmp/slavestatus
+	echo "<p>Information on ${ME}: <br />" > ${TMPDIR}/slavestatus
+	echo "Last update: ${NOW}<br />" >> ${TMPDIR}/slavestatus
 	
 	if [ -f /var/run/keepalived.pid ]; then 
 	    KPID=$(cat /var/run/keepalived.pid)
 	    if [ -d /proc/${KPID} ]; then
-	        echo "Keepalived running. Pid: ${KPID}<br />" >> /tmp/slavestatus
-            echo "<pre>" >> /tmp/slavestatus
-            /var/openpanel/tools/openpanel-keepalived-status >> /tmp/slavestatus
-            echo "</pre>" >> /tmp/slavestatus
+	        echo "Keepalived running. Pid: ${KPID}<br />" >> ${TMPDIR}/slavestatus
+            echo "<pre>" >> ${TMPDIR}/slavestatus
+            /var/openpanel/tools/openpanel-keepalived-status >> ${TMPDIR}/slavestatus
+            echo "</pre>" >> ${TMPDIR}/slavestatus
 	    else
-	        echo "Pidfile for Keepalived found, but it's not running<br />" >> /tmp/slavestatus
+	        echo "Pidfile for Keepalived found, but it's not running<br />" >> ${TMPDIR}/slavestatus
 	    fi
 	else
-	    echo "<strong>No pidfile found for Keepalived</strong><br />" >> /tmp/slavestatus
+	    echo "<strong>No pidfile found for Keepalived</strong><br />" >> ${TMPDIR}/slavestatus
 	fi
-    echo "</p>" >> /tmp/slavestatus
+    echo "</p>" >> ${TMPDIR}/slavestatus
     
     MYIP=$(ip ro get ${MASTER} | grep src | awk ' { print $NF } ')
-    put ${MASTER} /tmp/slavestatus /etc/openpanel/ha/slavestatus/${MYIP}
+    put ${MASTER} ${TMPDIR}/slavestatus /etc/openpanel/ha/slavestatus/${MYIP}
 fi
 
-get ${MASTER} /etc/openpanel/rc.firewall /tmp/rc.firewall
+get ${MASTER} /etc/openpanel/rc.firewall ${TMPDIR}/rc.firewall
 
 if [ $? -eq 0 ]; then
     if [ -f /etc/openpanel/rc.firewall ]; then
-        diff -q /tmp/rc.firewall /etc/openpanel/rc.firewall || { \
-            mv /tmp/rc.firewall /etc/openpanel/rc.firewall && \
+        diff -q ${TMPDIR}/rc.firewall /etc/openpanel/rc.firewall || { \
+            mv ${TMPDIR}/rc.firewall /etc/openpanel/rc.firewall && \
             /etc/init.d/iptables restart
         }
     else
-        mv /tmp/rc.firewall /etc/openpanel/rc.firewall && \
+        mv ${TMPDIR}/rc.firewall /etc/openpanel/rc.firewall && \
         /etc/init.d/iptables restart
     fi
 else
@@ -175,12 +191,40 @@ else
     fi
 fi
 
-rget ${MASTER} /etc/openpanel/iptables.d /tmp/
+rget ${MASTER} /etc/openpanel/iptables.d ${TMPDIR}/
 if [ $? -eq 0 ]; then
-    diff -qr /tmp/iptables.d/ /etc/openpanel/iptables.d/ || { \
-        rsync -a --delete /tmp/iptables.d/ /etc/openpanel/iptables.d/ && \
+    diff -qr ${TMPDIR}/iptables.d/ /etc/openpanel/iptables.d/ || { \
+        rsync -a --delete ${TMPDIR}/iptables.d/ /etc/openpanel/iptables.d/ && \
             /var/openpanel/tools/iptables-update
     }
+fi
+
+get ${MASTER} /etc/ipsec.conf ${TMPDIR}/ipsec/ipsec.conf
+if [ $? -eq 0 ]; then
+    diff -q /etc/ipsec.conf ${TMPDIR}/ipsec/ipsec.conf || { \
+        mv ${TMPDIR}/ipsec/ipsec.conf /etc/ipsec.conf && \
+            RELOADIPSEC="true"
+    }
+fi
+
+get ${MASTER} /etc/ipsec.secrets ${TMPDIR}/ipsec/ipsec.secrets
+if [ $? -eq 0 ]; then
+    diff -q /etc/ipsec.secrets ${TMPDIR}/ipsec/ipsec.secrets || { \
+        mv ${TMPDIR}/ipsec/ipsec.secrets /etc/ipsec.secrets && \
+            RELOADIPSEC="true"
+    }
+fi
+
+rget ${MASTER} /etc/ipsec.d/ ${TMPDIR}/ipsec/
+if [ $? -eq 0 ]; then
+    diff -qr ${TMPDIR}/ipsec/ipsec.d/ /etc/ipsec.d/ || { \
+        rsync -a --delete ${TMPDIR}/ipsec/ipsec.d/ /etc/ipsec.d/ && \
+            RELOADIPSEC="true"
+    }
+fi
+
+if [ "${RELOADIPSEC}" = "true" ]; then
+    reload_ipsec
 fi
 
 exit 0
