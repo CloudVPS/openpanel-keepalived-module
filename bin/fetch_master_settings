@@ -68,10 +68,10 @@ reload_ipsec() {
     fi
 }
 
+SDIR=/etc/openpanel/ha
 # Don't run if we aren't an active slave
 [ -f "${SDIR}/active_slave" ] || exit 0
 
-SDIR=/etc/openpanel/ha
 TMPDIR=$(mktemp -d)
 
 KEEPALIVED="true"
@@ -198,6 +198,8 @@ if [ $? -eq 0 ]; then
             /var/openpanel/tools/iptables-update
     }
 fi
+
+mkdir ${TMPDIR}/ipsec/
 
 get ${MASTER} /etc/ipsec.conf ${TMPDIR}/ipsec/ipsec.conf
 if [ $? -eq 0 ]; then
