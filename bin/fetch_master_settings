@@ -280,10 +280,17 @@ if [ $? -eq 0 ]; then
     }
 fi
 
-rget ${MASTER} /etc/ppp ${TMPDIR}/pptpd/
+get ${MASTER} /etc/ppp/chap-secrets ${TMPDIR}/pptpd/chap-secrets
 if [ $? -eq 0 ]; then
-    diff -qr ${TMPDIR}/pptpd/ppp/ /etc/ppp// || { \
-        rsync -a --delete ${TMPDIR}/pptpd/ppp/ /etc/ppp/ && \
+    diff -q /etc/ppp/chap-secrets ${TMPDIR}/pptpd/chap-secrets || { \
+        mv ${TMPDIR}/pptpd/chap-secrets /etc/ppp/chap-secrets
+    }
+fi
+
+get ${MASTER} /etc/ppp/pptpd-options ${TMPDIR}/pptpd/pptpd-options
+if [ $? -eq 0 ]; then
+    diff -q /etc/ppp/pptpd-options ${TMPDIR}/pptpd/pptpd-options || { \
+        mv ${TMPDIR}/pptpd/pptpd-options /etc/ppp/pptpd-options && \
             RELOADPPTPD="true"
     }
 fi
