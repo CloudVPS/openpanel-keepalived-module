@@ -1,10 +1,16 @@
 #!/bin/bash
 
+TMPDIR=$(mktemp -d)
+
 fatal() {
     echo $1
+    if [ `dirname ${TMPDIR}` = "/tmp" ]; then
+        rm -rf ${TMPDIR}
+    fi
     exit 1
 }
 
+# Generic function to get a single file from the master
 get() {
     HOST=$1
     SRC="${2}"
@@ -18,6 +24,7 @@ get() {
     return $?
 }
 
+# Generic function to get a complete directory from the master
 rget() {
     HOST=$1
     SRC="${2}"
@@ -29,6 +36,7 @@ rget() {
         "openpanel-ha@${MASTER}:${SRC}" "${DST}"
 }
 
+# Generic function to send a file to the master
 put() {
     HOST=$1
     SRC="${2}"
@@ -42,6 +50,7 @@ put() {
     return $?
 }
 
+# Reload the keepalived-service. Always start it if it doesn't run.
 reload_keepalived() {
     if [ -f /var/run/keepalived.pid ]; then
         KPID=$(cat /var/run/keepalived.pid)
@@ -55,6 +64,7 @@ reload_keepalived() {
     fi
 }
 
+# Reloud the ipsec-service. Always start it if it doesn't run.
 reload_ipsec() {
     if [ -f /var/run/ipsec/pluto.pid ]; then
         PPID=$(cat /var/run/ipsec/pluto.pid)
@@ -68,15 +78,29 @@ reload_ipsec() {
     fi
 }
 
+# Reloud the pptpd-service. Always start it if it doesn't run.
+reload_pptpd() {
+    if [ -f /var/run/pptpd.pid ]; then
+        PPID=$(cat /var/run/pptpd.pid)
+        if [ -d /proc/${PPID} ]; then
+            /etc/init.d/pptpd restart
+        else
+            /etc/init.d/pptpd start
+        fi
+    else 
+        /etc/init.d/pptpd start
+    fi
+}
+
+# Set generic options and make sure we need to run
 SDIR=/etc/openpanel/ha
-# Don't run if we aren't an active slave
 [ -f "${SDIR}/active_slave" ] || exit 0
 
-TMPDIR=$(mktemp -d)
 
+# START_KEEPALIVED #
+
+# Now let's sync keepalived-settings
 KEEPALIVED="true"
-RELOADIPSEC="false"
-
 MASTER=$(cat "${SDIR}/slave_master_ip")
 PRIO=$(cat "${SDIR}/prio")
 EXTERNAL_IFACE=$(cat "${SDIR}/external_iface")
@@ -171,7 +195,11 @@ if [ "${KEEPALIVED}" = "true" ]; then
     MYIP=$(ip ro get ${MASTER} | grep src | awk ' { print $NF } ')
     put ${MASTER} ${TMPDIR}/slavestatus /etc/openpanel/ha/slavestatus/${MYIP}
 fi
+# END_KEEPALIVED #
 
+
+# START_IPTABLES #
+# Now sync the iptables settings.
 get ${MASTER} /etc/openpanel/rc.firewall ${TMPDIR}/rc.firewall
 
 if [ $? -eq 0 ]; then
@@ -199,6 +227,13 @@ if [ $? -eq 0 ]; then
     }
 fi
 
+# END_IPTABLES #
+
+
+# START_IPSEC #
+# This syncs the IPSec configuration
+
+RELOADIPSEC="false"
 mkdir ${TMPDIR}/ipsec/
 
 get ${MASTER} /etc/ipsec.conf ${TMPDIR}/ipsec/ipsec.conf
@@ -228,6 +263,36 @@ fi
 if [ "${RELOADIPSEC}" = "true" ]; then
     reload_ipsec
 fi
+
+# END_IPSEC #
+
+# START_PPTPD #
+# This fetches pptpd settings
+
+RELOADPPTPD="false"
+mkdir ${TMPDIR}/pptpd/
+
+get ${MASTER} /etc/pptpd.conf ${TMPDIR}/pptpd/pptpd.conf
+if [ $? -eq 0 ]; then
+    diff -q /etc/pptpd.conf ${TMPDIR}/pptpd/pptpd.conf || { \
+        mv ${TMPDIR}/pptpd/pptpd.conf /etc/pptpd.conf && \
+            RELOADPPTPD="true"
+    }
+fi
+
+rget ${MASTER} /etc/ppp ${TMPDIR}/pptpd/
+if [ $? -eq 0 ]; then
+    diff -qr ${TMPDIR}/pptpd/ppp/ /etc/ppp// || { \
+        rsync -a --delete ${TMPDIR}/pptpd/ppp/ /etc/ppp/ && \
+            RELOADPPTPD="true"
+    }
+fi
+
+if [ "${RELOADPPTPD}" = "true" ]; then
+    reload_pptpd
+fi
+
+# END_PPTPD #
 
 if [ `dirname ${TMPDIR}` = "/tmp" ]; then
     rm -rf ${TMPDIR}
