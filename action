@@ -199,7 +199,6 @@ Keepalived:Slave.update() {
     slave_prio=$(coreval Keepalived:Slave slave_prio)
     slave_master_ip=$(coreval Keepalived:Slave slave_master_ip)
     slave_key=$(coreval Keepalived:Slave slave_key)
-    m_s=$(coreval Keepalived master_slave)
 
     echo ${slave_prio} > prio
     echo ${slave_master_ip} > slave_master_ip
@@ -207,7 +206,7 @@ Keepalived:Slave.update() {
     authd installfile prio /etc/openpanel/ha
     authd installfile slave_master_ip /etc/openpanel/ha
 
-    [ "${m_s}" = "slave" ] && authd runscript keepalived-fetch-master-settings || exiterror "We failed to fetch the master settings"
+    [ -f /etc/openpanel/ha/active_slave ] && authd runscript keepalived-fetch-master-settings || exiterror "We failed to fetch the master settings"
     authd runscript openpanel-keepalived-status > /var/openpanel/http/modules/keepalived/keepalived-status.html
 
     exitok
